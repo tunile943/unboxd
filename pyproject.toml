@@ -1,0 +1,27 @@
+[project]
+name = "unboxd"
+version = "0.1.0"
+description = "Personal Letterboxd recommender with two modes: Boxd In (comfort) and Boxd Out (explore)."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "scikit-learn>=1.4",
+    "requests>=2.31",
+    "streamlit>=1.35",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["unboxd"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
