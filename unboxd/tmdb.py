@@ -1,26 +1,28 @@
-"""Thin TMDB v3 client with a SQLite response cache.
+"""Thin TMDB v3 client with a pluggable response cache (see cache.py).
 
 Docs: https://developer.themoviedb.org/reference/intro/getting-started
 Attribution is required in the UI (see README).
+
+TODO: switch to async httpx so a /api/resolve batch can fetch concurrently
+and stay well under Vercel's 300s Hobby limit.
 """
 
 from __future__ import annotations
 
 import json
-import sqlite3
 import time
-from pathlib import Path
 from typing import Any
 
 import requests
 
+from .cache import Cache, default_cache
 from .config import CONFIG
 
 BASE = "https://api.themoviedb.org/3"
 
 
 class TMDBClient:
-    def __init__(self, token: str | None = None, cache_path: Path | None = None,
+    def __init__(self, token: str | None = None, cache: Cache | None = None,
                  ttl_seconds: int = 14 * 24 * 3600):
         self.token = token or CONFIG.tmdb_token
         if not self.token:
@@ -29,16 +31,13 @@ class TMDBClient:
         self.session.headers.update({"Authorization": f"Bearer {self.token}",
                                      "accept": "application/json"})
         self.ttl = ttl_seconds
-        path = cache_path or CONFIG.cache_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(path, check_same_thread=False)
-        self.db.execute("CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, v TEXT, t REAL)")
+        self.cache = cache or default_cache(CONFIG.cache_path)
 
     def get(self, path: str, **params: Any) -> dict:
         key = path + "?" + json.dumps(params, sort_keys=True)
-        row = self.db.execute("SELECT v, t FROM cache WHERE k = ?", (key,)).fetchone()
-        if row and time.time() - row[1] < self.ttl:
-            return json.loads(row[0])
+        cached = self.cache.get(key)
+        if cached is not None:
+            return cached
         for attempt in range(3):
             resp = self.session.get(BASE + path, params=params, timeout=15)
             if resp.status_code == 429:
@@ -46,9 +45,7 @@ class TMDBClient:
                 continue
             resp.raise_for_status()
             data = resp.json()
-            self.db.execute("REPLACE INTO cache VALUES (?, ?, ?)",
-                            (key, json.dumps(data), time.time()))
-            self.db.commit()
+            self.cache.set(key, data, self.ttl)
             return data
         resp.raise_for_status()
         return {}

@@ -7,23 +7,55 @@ A personal, non-commercial Letterboxd recommender. Upload your Letterboxd export
 
 Data comes from your own export (Settings → Import & Export → Export Your Data) plus TMDB metadata.
 
+## Architecture
+
+```
+Browser (Next.js, app/ + lib/)
+  unzip export locally (JSZip) → send only watched/ratings/diary/likes/watchlist CSVs
+        │
+        ▼
+Vercel Python function (FastAPI, api/index.py), stateless
+  /api/films      parse CSVs + weights
+  /api/resolve    match films to TMDB ids, ≤100 per batch (300s Hobby limit)
+  /api/recommend  mode=in | out
+        │
+        ▼
+TMDB API ── cache: Upstash Redis in production, SQLite locally (unboxd/cache.py)
+```
+
+The raw ZIP and `reviews.csv` never leave the browser, and the API stores nothing.
+
 ## Setup
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
+npm install
 cp .env.example .env   # add your TMDB read token
-streamlit run app.py
+npm run dev            # Next.js on :3000, FastAPI on :8000 (proxied at /api)
 pytest
 ```
+
+API docs while running locally: http://localhost:8000/api/docs
+
+## Deploy (Vercel)
+
+1. Import the repo at vercel.com/new. The framework is set to Next.js in `vercel.json`.
+2. Add the `TMDB_READ_TOKEN` environment variable.
+3. Optional: add Upstash Redis from the Vercel Marketplace. It sets `KV_REST_API_URL` / `KV_REST_API_TOKEN`, which `unboxd/cache.py` picks up.
+
+Python dependencies for the function come from `requirements.txt` (keep it in sync with `pyproject.toml`). The Python version is pinned in `.python-version`.
 
 ## Pipeline
 
 | Stage | Module | Status |
 |---|---|---|
-| Parse export ZIP → one row per film | `unboxd/ingest.py` | done |
+| Unzip export in browser, send only needed CSVs | `lib/export.ts` | done |
+| Parse CSVs → one row per film | `unboxd/ingest.py` | done |
 | Per-film weight w' in [-1, 1] | `unboxd/weights.py` | done |
-| TMDB client + SQLite cache | `unboxd/tmdb.py` | done (thin) |
+| API: `/api/films` | `api/index.py` | done |
+| API: `/api/resolve`, `/api/recommend` | `api/index.py` | stubs (501) |
+| TMDB client + swappable cache (Redis / SQLite) | `unboxd/tmdb.py`, `unboxd/cache.py` | done (thin, sync) |
 | Title/year → TMDB id, confidence flag | `unboxd/resolve.py` | TODO |
 | Facet vectors (people / form / place / theme) | `unboxd/features.py` | TODO |
 | Taste profile per facet | `unboxd/profile.py` | TODO |

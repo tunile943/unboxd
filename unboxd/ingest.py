@@ -9,6 +9,10 @@ Export files used (column names as Letterboxd writes them):
 
 Films are keyed on (Name, Year). The URI is not a reliable join key: in
 diary.csv it points to the log entry, not the film.
+
+In production the browser unzips the export and sends only the files in
+EXPORT_FILES as text, so `load_csvs` is the main entry point; `load_export`
+(ZIP) is kept for local use and tests.
 """
 
 from __future__ import annotations
@@ -21,15 +25,14 @@ from typing import BinaryIO
 import pandas as pd
 
 KEY = ["name", "year"]
+EXPORT_FILES = ("watched.csv", "ratings.csv", "diary.csv", "likes/films.csv", "watchlist.csv")
 
 
-def _read_csv(zf: zipfile.ZipFile, member: str) -> pd.DataFrame:
-    names = {n.lower(): n for n in zf.namelist()}
-    real = names.get(member.lower())
-    if real is None:
+def _read_csv(files: dict[str, str], member: str) -> pd.DataFrame:
+    text = files.get(member)
+    if not text or not text.strip():
         return pd.DataFrame(columns=["Name", "Year"])
-    with zf.open(real) as fh:
-        return pd.read_csv(fh)
+    return pd.read_csv(io.StringIO(text))
 
 
 def _normalize(df: pd.DataFrame) -> pd.DataFrame:
@@ -40,20 +43,29 @@ def _normalize(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_export(source: str | Path | BinaryIO | bytes) -> pd.DataFrame:
-    """Return a DataFrame with one row per film.
+    """Parse an export ZIP. See `load_csvs` for the output columns."""
+    if isinstance(source, bytes):
+        source = io.BytesIO(source)
+    with zipfile.ZipFile(source) as zf:
+        names = {n.lower(): n for n in zf.namelist()}
+        files = {m: zf.read(names[m]).decode("utf-8")
+                 for m in EXPORT_FILES if m in names}
+    return load_csvs(files)
+
+
+def load_csvs(files: dict[str, str]) -> pd.DataFrame:
+    """Return a DataFrame with one row per film, from {export path: CSV text}.
 
     Columns: name, year, rating (float, NaN if unrated), liked (bool),
     rewatch_count (int), on_watchlist (bool), watched (bool),
     last_watched (Timestamp, NaT if no diary entry).
     """
-    if isinstance(source, bytes):
-        source = io.BytesIO(source)
-    with zipfile.ZipFile(source) as zf:
-        watched = _normalize(_read_csv(zf, "watched.csv"))
-        ratings = _normalize(_read_csv(zf, "ratings.csv"))
-        diary = _normalize(_read_csv(zf, "diary.csv"))
-        likes = _normalize(_read_csv(zf, "likes/films.csv"))
-        watchlist = _normalize(_read_csv(zf, "watchlist.csv"))
+    files = {k.lower(): v for k, v in files.items()}
+    watched = _normalize(_read_csv(files, "watched.csv"))
+    ratings = _normalize(_read_csv(files, "ratings.csv"))
+    diary = _normalize(_read_csv(files, "diary.csv"))
+    likes = _normalize(_read_csv(files, "likes/films.csv"))
+    watchlist = _normalize(_read_csv(files, "watchlist.csv"))
 
     films = pd.concat([watched[KEY], ratings[KEY], diary[KEY]]).drop_duplicates(KEY)
 

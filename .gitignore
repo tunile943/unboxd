@@ -17,3 +17,10 @@ data/*
 .vscode/
 .idea/
 .ipynb_checkpoints/
+
+# Next.js / Vercel
+node_modules/
+.next/
+next-env.d.ts
+.vercel/
+*.tsbuildinfo

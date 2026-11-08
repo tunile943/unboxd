@@ -1,0 +1,9 @@
+# Runtime dependencies for the Vercel Python function (api/index.py).
+# Keep in sync with [project.dependencies] in pyproject.toml.
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.4
+requests>=2.31
+fastapi>=0.115
+upstash-redis>=1.1
+python-dotenv>=1.0
