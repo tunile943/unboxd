@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { type Film, type Pick, parseFilms, RESOLVE_BATCH, readExport, recommend, resolveFilms } from "@/lib/export";
+import { type Film, loadSample, type Pick, parseFilms, RESOLVE_BATCH, readExport, recommend, resolveFilms } from "@/lib/export";
+import { SampleLabel } from "./SampleLabel";
 
 type Tab = "in" | "out" | "data";
 
@@ -14,20 +15,38 @@ export default function Home() {
   const [picksIn, setPicksIn] = useState<Pick[] | null>(null);
   const [picksOut, setPicksOut] = useState<Pick[] | null>(null);
   const [outError, setOutError] = useState<string>("");
+  const [isSample, setIsSample] = useState(false);
   const upload = useRef(0); // a newer upload discards a pending Boxd Out
+  const label = useRef<HTMLDialogElement>(null);
+
+  function reset() {
+    upload.current++;
+    setFilms(null);
+    setPicksIn(null);
+    setPicksOut(null);
+    setOutError("");
+    setError("");
+    setIsSample(false);
+  }
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    e.target.value = "";
+    if (file) await run(() => readExport(file), false);
+  }
+
+  async function run(getFiles: () => Promise<Record<string, string>>, sample: boolean) {
     setError("");
     setFilms(null);
     setPicksIn(null);
     setPicksOut(null);
     setOutError("");
-    const run = ++upload.current;
+    setIsSample(sample);
+    setTab("in");
+    const current = ++upload.current;
     try {
-      setStatus("Unzipping your export…");
-      const files = await readExport(file);
+      setStatus(sample ? "Opening the sample diary…" : "Unzipping your export…");
+      const files = await getFiles();
       setStatus("Weighting your films…");
       const parsed = await parseFilms(files);
       setStatus("Matching films on TMDB…");
@@ -39,8 +58,8 @@ export default function Home() {
       const inPicks = await recommend(resolved, "in");
       setPicksIn(inPicks);
       recommend(resolved, "out", inPicks.map((p) => p.tmdb_id)).then(
-        (picks) => run === upload.current && setPicksOut(picks),
-        (err) => run === upload.current && setOutError(err instanceof Error ? err.message : String(err)),
+        (picks) => current === upload.current && setPicksOut(picks),
+        (err) => current === upload.current && setOutError(err instanceof Error ? err.message : String(err)),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -67,6 +86,12 @@ export default function Home() {
         <br />
         <input type="file" accept=".zip" onChange={onUpload} style={{ marginTop: 12 }} />
       </label>
+      <p>
+        No export?{" "}
+        <button className="link" type="button" disabled={!!status} onClick={() => run(loadSample, true)}>
+          Try with sample data
+        </button>
+      </p>
       <p className="muted" style={{ fontSize: "0.85rem" }}>
         The ZIP is unzipped in your browser. Only your film list and ratings are sent to the server,
         and nothing is stored.
@@ -83,6 +108,26 @@ export default function Home() {
 
       {films && (
         <>
+          {isSample && (
+            <div className="sample-strip">
+              <span>
+                <b>Sample diary</b> · {watched.length} films · {rated.length} rated
+              </span>
+              <button
+                className="info"
+                type="button"
+                aria-label="Who is the sample diary?"
+                aria-haspopup="dialog"
+                onClick={() => label.current?.showModal()}
+              >
+                i
+              </button>
+              <button className="link" type="button" onClick={reset}>
+                Use your own export
+              </button>
+              <SampleLabel ref={label} />
+            </div>
+          )}
           <p>
             {watched.length} films watched, {rated.length} rated,{" "}
             {films.filter((f) => f.on_watchlist).length} on your watchlist.

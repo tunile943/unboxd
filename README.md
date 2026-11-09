@@ -38,6 +38,8 @@ pytest                 # add -m live to also hit the real TMDB API
 
 Check matching on a real export: `python scripts/match_report.py <export.zip>`. Check Boxd In and Boxd Out: `python scripts/recommend_report.py <export.zip> --out --loo`. Refresh test fixtures: `python scripts/record_tmdb_fixtures.py`.
 
+The "Try with sample data" button loads a hand-written demo diary from `public/sample/` (described in `app/SampleLabel.tsx`; `tests/test_sample.py` keeps the two in sync).
+
 Wider check across many users: download [MovieLens ml-latest-small](https://grouplens.org/datasets/movielens/latest/)
 (GroupLens, University of Minnesota; not redistributable) into `data/movielens/`, then run
 `python scripts/movielens_eval.py data/movielens/ml-latest-small --split tune --compare`. Users are split once into

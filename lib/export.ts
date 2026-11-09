@@ -67,6 +67,18 @@ export async function readExport(file: File): Promise<Record<string, string>> {
   return files;
 }
 
+/** The curated sample diary in public/sample/, in the same shape as readExport. */
+export async function loadSample(): Promise<Record<string, string>> {
+  const texts = await Promise.all(
+    EXPORT_FILES.map(async (f) => {
+      const resp = await fetch(`/sample/${f}`);
+      if (!resp.ok) throw new Error(`Couldn't load the sample diary (${f}: ${resp.status}).`);
+      return [f, await resp.text()] as const;
+    }),
+  );
+  return Object.fromEntries(texts);
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const resp = await fetch(path, {
     method: "POST",
