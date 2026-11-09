@@ -27,6 +27,10 @@ class FakeTMDB:
             raise self.error
         return self.responses.get(f"tv|{title}|{year}", [])
 
+    def tv_details(self, tv_id):
+        self.calls.append(("tvd", tv_id))
+        return self.responses.get(f"tvd|{tv_id}", {})
+
 
 @pytest.fixture
 def fake_tmdb():

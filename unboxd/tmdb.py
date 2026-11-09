@@ -68,6 +68,9 @@ class TMDBClient:
             params["first_air_date_year"] = int(year)
         return self.get("/search/tv", **params).get("results", [])
 
+    def tv_details(self, tv_id: int) -> dict:
+        return self.get(f"/tv/{tv_id}")
+
     def details(self, movie_id: int) -> dict:
         """Details + credits + keywords in one call."""
         return self.get(f"/movie/{movie_id}", append_to_response="credits,keywords")

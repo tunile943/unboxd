@@ -1,4 +1,4 @@
-"""Match export films (name, year) to TMDB movies, or TV series as a fallback.
+"""Match export films (name, year) to TMDB movies or limited TV series (Letterboxd lists those).
 
 Candidates are scored as title_sim * year_factor + a small popularity tie-breaker.
 high = strong title, same year, clear margin over the runner-up; low = best guess
@@ -12,7 +12,7 @@ import re
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from difflib import SequenceMatcher
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 import pandas as pd
 import requests
@@ -26,6 +26,7 @@ MATCH_COLUMNS = ["tmdb_id", "tmdb_title", "tmdb_year", "media_type", "match_conf
 class SearchClient(Protocol):
     def search_movie(self, title: str, year: int | None = None) -> list[dict]: ...
     def search_tv(self, title: str, year: int | None = None) -> list[dict]: ...
+    def tv_details(self, tv_id: int) -> dict: ...
 
 
 def normalize_title(s: str) -> str:
@@ -82,15 +83,23 @@ def _no_match(reason: str, candidates: list[dict] | None = None) -> dict:
             "candidates": candidates or []}
 
 
-def _search(search: Callable[[str, int | None], list[dict]], name: str, year: int | None,
-            norm: str, cfg: MatchConfig) -> list[dict]:
+def _is_limited_series(client: SearchClient, cand: dict, norm: str, cfg: MatchConfig) -> bool:
+    if title_similarity(norm, cand) < cfg.min_title_sim:
+        return False  # can't win; skip the details call
+    d = client.tv_details(cand["id"])
+    return d.get("type") == "Miniseries" or (d.get("number_of_seasons") == 1 and d.get("status") == "Ended")
+
+
+def _search(client: SearchClient, name: str, year: int | None, norm: str,
+            cfg: MatchConfig) -> list[dict]:
     # Letterboxd's year is sometimes a festival premiere, not TMDB's primary release
     # (e.g. Crash: 2004 vs 2005), so search any release that year, then without a year.
-    seen: dict[int, dict] = {}
+    seen: dict[tuple[str, int], dict] = {}
     for y in ([year, None] if year else [None]):
-        results = search(name, y)
+        tv = [_tv_as_movie(c) for c in client.search_tv(name, y)]
+        results = client.search_movie(name, y) + [c for c in tv if _is_limited_series(client, c, norm, cfg)]
         for cand in results:
-            seen.setdefault(cand["id"], cand)
+            seen.setdefault((cand.get("media_type", "movie"), cand["id"]), cand)
         if any(title_similarity(norm, c) >= cfg.high_title_sim for c in results):
             break
     return list(seen.values())
@@ -123,7 +132,7 @@ def _pick(cands: list[dict], year: int | None, norm: str, cfg: MatchConfig) -> d
                  and best_norm in (normalize_title(c.get("title") or ""),
                                    normalize_title(c.get("original_title") or ""))]
         if twins:
-            reason = f"{len(twins) + 1} films share this title"
+            reason = f"{len(twins) + 1} titles share this name"
         elif diff:
             reason = f"Year differs by {diff}"
         elif sim1 < cfg.high_title_sim:
@@ -139,18 +148,13 @@ def _pick(cands: list[dict], year: int | None, norm: str, cfg: MatchConfig) -> d
 
 def match_film(name: str, year: int | None, client: SearchClient,
                cfg: MatchConfig | None = None) -> dict:
-    """Match one film, falling back to TV series (Letterboxd lists some). Returns MATCH_COLUMNS."""
+    """Match one film. Returns a dict with the MATCH_COLUMNS keys."""
     cfg = cfg or MatchConfig()
     norm = normalize_title(name)
     try:
-        movie = _pick(_search(client.search_movie, name, year, norm, cfg), year, norm, cfg)
-        if movie["match_confidence"] != "none":
-            return movie
-        tv = _pick(_search(lambda t, y: [_tv_as_movie(c) for c in client.search_tv(t, y)],
-                           name, year, norm, cfg), year, norm, cfg)
+        return _pick(_search(client, name, year, norm, cfg), year, norm, cfg)
     except requests.RequestException:  # TMDBAuthError isn't one, so it aborts the batch
         return _no_match("Lookup failed")
-    return tv if tv["match_confidence"] != "none" else movie
 
 
 def resolve_films(films: pd.DataFrame, client: SearchClient,
