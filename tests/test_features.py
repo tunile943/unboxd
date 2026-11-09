@@ -51,3 +51,10 @@ def test_item_similarity():
                       ("movie", 3): movie("B", ["Comedy"], ["y"], country="FR", lang="fr")})
     sim = item_similarity(f, [("movie", 1), ("movie", 2), ("movie", 3)], {"people": 1, "form": 1, "place": 1, "theme": 1})
     assert np.isclose(sim[0, 1], 1.0) and sim[0, 2] < 0.1
+
+
+def test_meta_keywords_are_not_themes():
+    from conftest import movie
+    from unboxd.features import facet_tokens
+    tokens = facet_tokens(movie(keywords=["heist", "aftercreditsstinger", "woman director"]), "movie")
+    assert tokens["theme"] == ["kw:heist"]

@@ -11,6 +11,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 FACETS = ("people", "form", "place", "theme")
 Key = tuple[str, int]  # (media_type, tmdb_id)
+# TMDB keywords about how a film was made or released, not what it's about
+META_KEYWORDS = {"aftercreditsstinger", "duringcreditsstinger", "woman director"}
 
 TV_GENRES = {
     "Sci-Fi & Fantasy": ["Science Fiction", "Fantasy"],
@@ -63,7 +65,7 @@ def facet_tokens(d: dict, media_type: str) -> dict[str, list[str]]:
         + [f"cast:{p['name']}" for p in cast],
         "form": [f"genre:{g}" for g in genres] + ([f"decade:{date[:3]}0s"] if date[:4].isdigit() else []),
         "place": [f"country:{c}" for c in d.get("origin_country", [])] + ([f"lang:{lang}"] if lang else []),
-        "theme": [f"kw:{k['name']}" for k in keywords],
+        "theme": [f"kw:{k['name']}" for k in keywords if k["name"] not in META_KEYWORDS],
     }
 
 

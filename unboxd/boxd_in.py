@@ -23,7 +23,7 @@ from .features import FacetMatrix, Key, build_facets, facet_tokens, fetch_detail
 from .profile import TasteProfile, build_profile, similarity
 
 CANDIDATE_COLUMNS = ["tmdb_id", "title", "year", "released", "poster_path", "vote_count", "vote_average", "strength",
-                     "because", "because_ids", "via"]
+                     "because", "because_ids", "via", "via_crew"]
 PICK_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "score", "strength", "similarity",
                 "reason", "on_watchlist"]
 
@@ -97,16 +97,17 @@ def gather_candidates(seeds: pd.DataFrame, anti: pd.DataFrame, queries: list[tup
                     "tmdb_id": r["id"], "title": r.get("title"), "year": int(released[:4]), "released": released,
                     "poster_path": r.get("poster_path"), "vote_count": r.get("vote_count"),
                     "vote_average": r.get("vote_average") or 0.0,
-                    "strength": 0.0, "penalty": 0.0, "because": [], "because_ids": [], "via": []})
+                    "strength": 0.0, "penalty": 0.0, "because": [], "because_ids": [], "via": [], "via_crew": []})
 
     for name, seed_id, w, results in zip(seeds["name"], seeds["tmdb_id"], seeds["weight"], liked):
         for c in eligible(results):
             c["strength"] += w
             c["because"].append(name)
             c["because_ids"].append(int(seed_id))
-    for (reason, _), results in zip(queries, found):
+    for (reason, filters), results in zip(queries, found):
         for c in eligible(results):
             c["via"].append(reason)
+            c["via_crew"].append(filters.get("with_crew"))
     for w, results in zip(anti["weight"], disliked):
         for c in eligible(results):
             c["penalty"] -= w
@@ -123,6 +124,25 @@ def drop_genres(cands: pd.DataFrame, details: dict[Key, dict], genres: tuple[str
     excluded = {f"genre:{g}" for g in genres}
     keep = [not excluded & set(facet_tokens(details[("movie", int(i))], "movie")["form"]) for i in cands["tmdb_id"]]
     return cands[keep].reset_index(drop=True)
+
+
+def verify_crew(cands: pd.DataFrame, details: dict[Key, dict]) -> pd.DataFrame:
+    """/discover's with_crew matches any crew job. Keep a director-query nomination only if that person
+    directed the film (or wrote it, with the reason adjusted); drop candidates left with no nomination."""
+    vias = []
+    for tmdb_id, via, crew in zip(cands["tmdb_id"], cands["via"], cands["via_crew"]):
+        jobs = defaultdict(set)
+        for p in details.get(("movie", int(tmdb_id)), {}).get("credits", {}).get("crew", []):
+            jobs[p["id"]].add(p["job"])
+        kept = []
+        for reason, person in zip(via, crew):
+            if person is None or "Director" in jobs[person]:
+                kept.append(reason)
+            elif jobs[person] & {"Writer", "Screenplay", "Story"}:
+                kept.append(reason.replace("From ", "Written by ", 1))
+        vias.append(kept)
+    cands = cands.assign(via=vias)
+    return cands[cands["because"].map(bool) | cands["via"].map(bool)].reset_index(drop=True)
 
 
 def franchise_opinions(weights: dict[Key, float], details: dict[Key, dict]) -> dict[int, float]:
@@ -195,7 +215,7 @@ def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
 
     cand_keys = [("movie", int(i)) for i in cands["tmdb_id"]]
     details |= fetch_details([key for key in cand_keys if key not in details], client, cfg.workers)
-    cands = drop_genres(cands, details, cfg.exclude_genres)
+    cands = verify_crew(drop_genres(cands, details, cfg.exclude_genres), details)
     if cands.empty:
         return pd.DataFrame(columns=PICK_COLUMNS)
     cand_keys = [("movie", int(i)) for i in cands["tmdb_id"]]
