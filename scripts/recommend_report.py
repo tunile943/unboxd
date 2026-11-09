@@ -18,8 +18,7 @@ from unboxd import boxd_out
 from unboxd.boxd_in import recommend, select_seeds
 from unboxd.cache import SQLiteCache
 from unboxd.config import ExploreConfig, RecommendConfig
-from unboxd.evaluate import explore_leave_one_out, leave_one_out
-from unboxd.features import facet_tokens, fetch_details
+from unboxd.evaluate import explore_leave_one_out, leave_one_out, list_metrics
 from unboxd.ingest import load_export
 from unboxd.resolve import resolve_films
 from unboxd.tmdb import TMDBClient
@@ -41,18 +40,10 @@ def report_out(films: pd.DataFrame, client, cfg: RecommendConfig, boxd_in_top50:
     print(f"\nBoxd Out ({time.perf_counter() - start:.1f}s)")
     print(picks[["title", "year", "score", "quality", "novelty", "bridge", "reason", "on_watchlist"]]
           .round(2).to_string())
-    details = fetch_details([("movie", int(i)) for i in picks["tmdb_id"]], client)
-    tokens = [facet_tokens(d, "movie") for d in details.values()]
-
-    def distinct(facet, prefix):
-        return len({t for x in tokens for t in x[facet] if t.startswith(prefix)})
-
-    print(f"mean TMDB rating {sum(d.get('vote_average', 0) for d in details.values()) / len(details):.2f}, "
-          f"mean novelty {picks['novelty'].mean():.2f}, {distinct('place', 'lang:')} languages, "
-          f"{distinct('form', 'decade:')} decades, {distinct('form', 'genre:')} genres, "
-          f"{sum('lang:en' in x['place'] for x in tokens)} in English, "
-          f"{picks['reason'].str.contains('you love').sum()} with a bridge, "
-          f"{len(boxd_in_top50 & set(picks['tmdb_id']))} also in Boxd In's top 50")
+    m = list_metrics(picks, client, boxd_in_top50)
+    print(f"mean TMDB rating {m['rating']:.2f}, mean novelty {m['novelty']:.2f}, {m['languages']} languages, "
+          f"{m['decades']} decades, {m['genres']} genres, {m['english']} in English, {m['bridged']} with a bridge, "
+          f"{m['overlap']} also in Boxd In's top 50")
     if loo:
         r = explore_leave_one_out(films, client, ExploreConfig(), cfg)
         print(f"explore leave-one-out: in pool {r.in_pool.sum()}/{len(r)}, in top 50 {r.in_top_k.sum()}/{len(r)}"

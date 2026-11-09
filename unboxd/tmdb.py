@@ -40,14 +40,23 @@ class TMDBClient:
         if cached is not None:
             return cached
         for attempt in range(3):
-            resp = self.session.get(BASE + path, params=params, timeout=15)
-            if resp.status_code == 429:
+            try:
+                resp = self.session.get(BASE + path, params=params, timeout=15)
+            except (requests.Timeout, requests.ConnectionError):
+                if attempt == 2:
+                    raise
+                time.sleep(1 + attempt)
+                continue
+            if resp.status_code == 429 or resp.status_code >= 500:
                 time.sleep(float(resp.headers.get("Retry-After", 1 + attempt)))
                 continue
             if resp.status_code == 401:
                 raise TMDBAuthError("TMDB rejected the token (401); check TMDB_READ_TOKEN")
-            resp.raise_for_status()
-            data = resp.json()
+            if resp.status_code == 404:  # id deleted or merged on TMDB: treat as a film with no data
+                data = {}
+            else:
+                resp.raise_for_status()
+                data = resp.json()
             self.cache.set(key, data, self.ttl)
             return data
         resp.raise_for_status()
