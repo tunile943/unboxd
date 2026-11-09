@@ -3,8 +3,8 @@
 Candidates come from TMDB recommendations of your top films (strength = sum of
 their w'), minus those of your least-liked films (anti-seeds), plus /discover
 results for your profile's favorite directors and keywords. They're ranked by a
-blend of strength and similarity to your taste profile, minus a penalty for
-franchises you dislike on balance, then diversified (MMR).
+blend of strength, similarity to your taste profile and a Bayesian TMDB rating,
+minus a penalty for franchises you dislike on balance, then diversified (MMR).
 """
 
 from __future__ import annotations
@@ -22,7 +22,8 @@ from .diversify import mmr
 from .features import FacetMatrix, Key, build_facets, fetch_details, item_similarity
 from .profile import TasteProfile, build_profile, similarity
 
-CANDIDATE_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "vote_count", "strength", "because", "via"]
+CANDIDATE_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "vote_count", "vote_average", "strength",
+                     "because", "because_ids", "via"]
 PICK_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "score", "strength", "similarity",
                 "reason", "on_watchlist"]
 
@@ -89,12 +90,14 @@ def gather_candidates(seeds: pd.DataFrame, anti: pd.DataFrame, queries: list[tup
                 yield cands.setdefault(r["id"], {
                     "tmdb_id": r["id"], "title": r.get("title"), "year": int(released[:4]),
                     "poster_path": r.get("poster_path"), "vote_count": r.get("vote_count"),
-                    "strength": 0.0, "penalty": 0.0, "because": [], "via": []})
+                    "vote_average": r.get("vote_average") or 0.0,
+                    "strength": 0.0, "penalty": 0.0, "because": [], "because_ids": [], "via": []})
 
-    for name, w, results in zip(seeds["name"], seeds["weight"], liked):
+    for name, seed_id, w, results in zip(seeds["name"], seeds["tmdb_id"], seeds["weight"], liked):
         for c in eligible(results):
             c["strength"] += w
             c["because"].append(name)
+            c["because_ids"].append(int(seed_id))
     for (reason, _), results in zip(queries, found):
         for c in eligible(results):
             c["via"].append(reason)
@@ -104,8 +107,9 @@ def gather_candidates(seeds: pd.DataFrame, anti: pd.DataFrame, queries: list[tup
 
     kept = [{**c, "strength": c["strength"] - cfg.anti_weight * c["penalty"]}
             for c in cands.values() if c["because"] or c["via"]]
-    df = pd.DataFrame(kept, columns=CANDIDATE_COLUMNS)
-    return df.sort_values("strength", ascending=False).head(cfg.max_candidates).reset_index(drop=True)
+    df = pd.DataFrame(kept, columns=CANDIDATE_COLUMNS).sort_values("strength", ascending=False)
+    recommended = df[df["because"].map(bool)].head(cfg.max_candidates)
+    return pd.concat([recommended, df[~df["because"].map(bool)]]).reset_index(drop=True)
 
 
 def franchise_opinions(weights: dict[Key, float], details: dict[Key, dict]) -> dict[int, float]:
@@ -122,6 +126,21 @@ def franchise_penalty(d: dict, opinions: dict[int, float], cfg: RecommendConfig)
     collection = d.get("belongs_to_collection")
     opinion = opinions.get(collection["id"]) if collection else None
     return cfg.franchise_weight * -opinion if opinion is not None and opinion <= -cfg.franchise_dead_zone else 0.0
+
+
+def seed_credibility(seed_ids: list[int], details: dict[Key, dict], cfg: RecommendConfig) -> float:
+    """How far to trust a nomination: the most-voted recommending seed, as a share of reliable_seed_votes.
+    Discover-only picks (no seeds) are fully trusted."""
+    if not seed_ids:
+        return 1.0
+    votes = max(details.get(("movie", i), {}).get("vote_count") or 0 for i in seed_ids)
+    return min(1.0, votes / cfg.reliable_seed_votes)
+
+
+def bayesian_rating(avg: pd.Series, votes: pd.Series, m: int) -> pd.Series:
+    """Rating pulled toward the pool's mean when there are few votes: (v·R + m·C) / (v + m)."""
+    prior = (avg * votes).sum() / max(votes.sum(), 1)
+    return (votes * avg + m * prior) / (votes + m)
 
 
 def _reason(because: list[str], via: list[str]) -> str:
@@ -159,8 +178,13 @@ def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
     cands["similarity"] = sim["total"].to_numpy()
     opinions = franchise_opinions(weights, details)
     cands["franchise_penalty"] = [franchise_penalty(details[key], opinions, cfg) for key in cand_keys]
+    cands["quality"] = bayesian_rating(cands["vote_average"], cands["vote_count"], cfg.quality_m) / 10
+    cands["credibility"] = [seed_credibility(ids, details, cfg) for ids in cands["because_ids"]]
     cands["score"] = (cfg.rec_weight * (cands["strength"] / top if top > 0 else 0)
-                      + (1 - cfg.rec_weight) * cands["similarity"] - cands["franchise_penalty"])
+                      + (1 - cfg.rec_weight) * cands["similarity"]
+                      + cfg.quality_weight * cands["quality"] - cands["franchise_penalty"]
+                      - cfg.reliability_weight * (1 - cands["credibility"])
+                      + cfg.consensus_weight * np.log(cands["because"].map(len).clip(lower=1)))
     pool = cands.nlargest(cfg.mmr_pool, "score")
     pool_keys = [("movie", int(i)) for i in pool["tmdb_id"]]
     order = mmr(pool["score"].to_numpy(), item_similarity(facets, pool_keys, cfg.facet_weights), k, mmr_lambda)

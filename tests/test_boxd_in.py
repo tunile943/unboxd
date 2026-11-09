@@ -4,7 +4,8 @@ from dataclasses import replace
 import pandas as pd
 
 from conftest import BOXD_IN_FIXTURES, FakeTMDB, movie, rec
-from unboxd.boxd_in import franchise_opinions, franchise_penalty, gather_candidates, recommend, select_seeds
+from unboxd.boxd_in import (franchise_opinions, franchise_penalty, gather_candidates, recommend,
+                             seed_credibility, select_seeds)
 from unboxd.config import RecommendConfig
 from unboxd.evaluate import leave_one_out
 
@@ -141,3 +142,45 @@ def test_sequel_of_disliked_film_ranks_below_its_twin():
     client.responses["md|11"] = in_collection(client.responses["md|11"], 60)  # its "sequel", otherwise = film 10
     picks = list(recommend(df, client, ALL_SEEDS, k=10, mmr_lambda=1.0)["tmdb_id"])
     assert picks.index(10) < picks.index(11)
+
+
+def test_cap_never_drops_discover_picks():
+    client = FakeTMDB({"rec|1": [rec(100), rec(101)],
+                       "disc|" + json.dumps({"with_crew": 7}, sort_keys=True): [rec(107)]})
+    seeds = films({"name": "A", "tmdb_id": 1, "weight": 0.9})
+    c = gather_candidates(seeds, seeds.iloc[:0], [("From Someone", {"with_crew": 7})], set(), client,
+                          replace(CFG, max_candidates=1), today="2026-01-01")
+    assert set(c["tmdb_id"]) == {100, 107}  # cap applies to recommended films only
+
+
+def test_bayesian_rating():
+    from unboxd.boxd_in import bayesian_rating
+    avg, votes = pd.Series([8.5, 9.0, 6.0]), pd.Series([40000, 20, 40000])
+    r = bayesian_rating(avg, votes, m=500)
+    assert abs(r[0] - 8.5) < 0.05 and r[1] < 7.5 and abs(r[2] - 6.0) < 0.05  # few votes -> pulled to the mean
+
+
+def test_quality_breaks_ties():
+    df, client = recommend_setup()
+    client.responses["rec|1"] = [{**rec(10), "vote_average": 6.0, "vote_count": 5000},
+                                 {**rec(11), "vote_average": 8.5, "vote_count": 5000}]  # 10 and 11 are twins
+    picks = list(recommend(df, client, ALL_SEEDS, k=10, mmr_lambda=1.0)["tmdb_id"])
+    assert picks.index(11) < picks.index(10)
+
+
+def test_seed_credibility():
+    details = {("movie", 1): {"vote_count": 12000}, ("movie", 2): {"vote_count": 100}}
+    cfg = replace(CFG, reliable_seed_votes=500)
+    assert seed_credibility([2], details, cfg) == 0.2
+    assert seed_credibility([2, 1], details, cfg) == 1.0  # the most reliable recommending seed counts
+    assert seed_credibility([], details, cfg) == 1.0  # discover picks
+
+
+def test_unreliable_seed_is_discounted():
+    df, client = recommend_setup()
+    client.responses["md|1"] = {**client.responses["md|1"], "vote_count": 50}  # Rushmore: thin TMDB data
+    client.responses["md|2"] = {**client.responses["md|2"], "vote_count": 9000}
+    client.responses["rec|1"] = [rec(10)]  # twins: 10 only via the unreliable seed, 11 via the reliable one
+    client.responses["rec|2"] = [rec(11)]
+    picks = list(recommend(df, client, replace(ALL_SEEDS, reliability_weight=0.5), k=10, mmr_lambda=1.0)["tmdb_id"])
+    assert picks.index(11) < picks.index(10)

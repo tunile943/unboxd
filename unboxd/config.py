@@ -57,10 +57,16 @@ class RecommendConfig:
     discover_people: int = 5  # profile's top directors -> /discover
     discover_keywords: int = 5  # profile's top keywords -> /discover
     min_votes: int = 50  # quality floor for candidates
-    max_candidates: int = 300
+    max_candidates: int = 300  # cap on TMDB-recommended candidates; discover picks are always kept
     rec_weight: float = 0.0  # TMDB recs nominate, the profile ranks (best in leave-one-out)
+    # place is ~1.0 for most US/English films, so it doesn't tell candidates apart
     facet_weights: dict[str, float] = field(
-        default_factory=lambda: {"people": 0.3, "form": 0.25, "place": 0.15, "theme": 0.3})
+        default_factory=lambda: {"people": 0.35, "form": 0.2, "place": 0.0, "theme": 0.45})
+    quality_weight: float = 0.6  # Bayesian TMDB rating (/10); 1.0 drifts toward famous classics
+    quality_m: int = 500  # Bayesian prior strength, in votes
+    reliability_weight: float = 0.2  # discount for films nominated only by seeds with few TMDB votes
+    reliable_seed_votes: int = 500  # a seed with this many votes has a trusted recommendation list (1000 lost Bugonia)
+    consensus_weight: float = 0.0  # bonus × log(#recommending seeds); off: favors blockbusters, hurt leave-one-out
     profile_min_abs_weight: float = 0.05  # near-neutral films barely move the profile
     franchise_weight: float = 1.0  # penalty per unit of net dislike for a TMDB collection
     franchise_dead_zone: float = 0.10  # net w' above -0.10 ("it was fine") isn't a dislike

@@ -36,7 +36,7 @@ TV_KEEP = ("id", "name", "original_name", "first_air_date", "popularity", "vote_
 OUT = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "tmdb_search.json"
 BOXD_IN_OUT = OUT.with_name("tmdb_boxd_in.json")
 BOXD_IN_FILMS = [("Heat", 949, 5.0), ("Parasite", 496243, 4.5), ("Transformers", 1858, 1.0)]
-RESULT_KEEP = ("id", "title", "release_date", "vote_count", "poster_path", "media_type")
+RESULT_KEEP = ("id", "title", "release_date", "vote_count", "vote_average", "poster_path", "media_type")
 
 
 def _trim_details(d: dict) -> dict:
@@ -44,7 +44,8 @@ def _trim_details(d: dict) -> dict:
     def pick(items, *keys):
         return [{k: x.get(k) for k in keys} for x in items]
 
-    out = {k: d[k] for k in ("release_date", "first_air_date", "origin_country", "original_language") if k in d}
+    out = {k: d[k] for k in ("release_date", "first_air_date", "origin_country", "original_language", "vote_count",
+                             "belongs_to_collection") if k in d}
     out["genres"] = pick(d.get("genres", []), "name")
     out["created_by"] = pick(d.get("created_by", []), "id", "name")
     if "credits" in d:
