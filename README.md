@@ -33,8 +33,10 @@ pip install -e ".[dev]"
 npm install
 cp .env.example .env   # add your TMDB read token
 npm run dev            # Next.js on :3000, FastAPI on :8000 (proxied at /api)
-pytest
+pytest                 # add -m live to also hit the real TMDB API
 ```
+
+Check matching on a real export: `python scripts/match_report.py <export.zip>`. Refresh test fixtures: `python scripts/record_tmdb_fixtures.py`.
 
 API docs while running locally: http://localhost:8000/api/docs
 
@@ -54,14 +56,15 @@ Python dependencies for the function come from `requirements.txt` (keep it in sy
 | Parse CSVs → one row per film | `unboxd/ingest.py` | done |
 | Per-film weight w' in [-1, 1] | `unboxd/weights.py` | done |
 | API: `/api/films` | `api/index.py` | done |
-| API: `/api/resolve`, `/api/recommend` | `api/index.py` | stubs (501) |
-| TMDB client + swappable cache (Redis / SQLite) | `unboxd/tmdb.py`, `unboxd/cache.py` | done (thin, sync) |
-| Title/year → TMDB id, confidence flag | `unboxd/resolve.py` | TODO |
+| API: `/api/resolve` (batched TMDB matching) | `api/index.py`, `lib/export.ts` | done |
+| API: `/api/recommend` | `api/index.py` | stub (501) |
+| TMDB client + swappable cache (Redis / SQLite) | `unboxd/tmdb.py`, `unboxd/cache.py` | done |
+| Title/year → TMDB id, confidence, reason, alternatives | `unboxd/resolve.py` | done |
 | Facet vectors (people / form / place / theme) | `unboxd/features.py` | TODO |
 | Taste profile per facet | `unboxd/profile.py` | TODO |
 | Boxd In (exploit) | `unboxd/boxd_in.py` | TODO |
 | Boxd Out (explore) | `unboxd/boxd_out.py` | TODO |
-| MMR diversification | `unboxd/diversify.py` | TODO |
+| MMR diversification | `unboxd/diversify.py` | done |
 | Holdout evaluation | `unboxd/evaluate.py` | TODO |
 
 Tunables (γ, λ, explore band, Bayesian m, ...) live in `unboxd/config.py`.

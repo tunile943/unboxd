@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import threading
 import time
 from pathlib import Path
 from typing import Any, Protocol
@@ -22,21 +23,26 @@ class Cache(Protocol):
 
 
 class SQLiteCache:
+    """One shared connection guarded by a lock, so threads can use it safely."""
+
     def __init__(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
+        self.lock = threading.Lock()
         self.db = sqlite3.connect(path, check_same_thread=False)
         self.db.execute("CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, v TEXT, exp REAL)")
 
     def get(self, key: str) -> Any | None:
-        row = self.db.execute("SELECT v, exp FROM cache WHERE k = ?", (key,)).fetchone()
+        with self.lock:
+            row = self.db.execute("SELECT v, exp FROM cache WHERE k = ?", (key,)).fetchone()
         if row and row[1] > time.time():
             return json.loads(row[0])
         return None
 
     def set(self, key: str, value: Any, ttl: int) -> None:
-        self.db.execute("REPLACE INTO cache VALUES (?, ?, ?)",
-                        (key, json.dumps(value), time.time() + ttl))
-        self.db.commit()
+        with self.lock:
+            self.db.execute("REPLACE INTO cache VALUES (?, ?, ?)",
+                            (key, json.dumps(value), time.time() + ttl))
+            self.db.commit()
 
 
 class RedisCache:

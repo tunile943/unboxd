@@ -20,7 +20,14 @@ export type Film = {
   last_watched: string | null;
   weight: number | null;
   tmdb_id?: number | null;
+  tmdb_title?: string | null;
+  tmdb_year?: number | null;
+  match_confidence?: "high" | "low" | "none" | null;
+  match_reason?: string | null;
+  candidates?: { id: number; title: string | null; year: number | null; poster_path: string | null }[];
 };
+
+export const RESOLVE_BATCH = 100;
 
 /** Unzip a Letterboxd export locally and return {export path: CSV text}. */
 export async function readExport(file: File): Promise<Record<string, string>> {
@@ -44,12 +51,37 @@ export async function readExport(file: File): Promise<Record<string, string>> {
   return files;
 }
 
-export async function parseFilms(files: Record<string, string>): Promise<Film[]> {
-  const resp = await fetch("/api/films", {
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const resp = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ files }),
+    body: JSON.stringify(body),
   });
   if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
-  return (await resp.json()).films;
+  return resp.json();
+}
+
+export async function parseFilms(files: Record<string, string>): Promise<Film[]> {
+  return (await post<{ films: Film[] }>("/api/films", { files })).films;
+}
+
+/** Match films to TMDB in batches (each call must finish within Vercel's time limit). */
+export async function resolveFilms(
+  films: Film[],
+  onProgress: (done: number, total: number) => void = () => {},
+): Promise<Film[]> {
+  const total = Math.ceil(films.length / RESOLVE_BATCH);
+  const out: Film[] = [];
+  for (let i = 0; i < total; i++) {
+    const batch = films.slice(i * RESOLVE_BATCH, (i + 1) * RESOLVE_BATCH);
+    let result: { films: Film[] };
+    try {
+      result = await post("/api/resolve", { films: batch });
+    } catch {
+      result = await post("/api/resolve", { films: batch }); // one retry, then surface the error
+    }
+    out.push(...result.films);
+    onProgress(i + 1, total);
+  }
+  return out;
 }

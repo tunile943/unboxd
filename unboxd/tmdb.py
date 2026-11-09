@@ -2,9 +2,6 @@
 
 Docs: https://developer.themoviedb.org/reference/intro/getting-started
 Attribution is required in the UI (see README).
-
-TODO: switch to async httpx so a /api/resolve batch can fetch concurrently
-and stay well under Vercel's 300s Hobby limit.
 """
 
 from __future__ import annotations
@@ -19,6 +16,10 @@ from .cache import Cache, default_cache
 from .config import CONFIG
 
 BASE = "https://api.themoviedb.org/3"
+
+
+class TMDBAuthError(RuntimeError):
+    """The token was rejected (401). Not retryable; fix TMDB_READ_TOKEN."""
 
 
 class TMDBClient:
@@ -43,6 +44,8 @@ class TMDBClient:
             if resp.status_code == 429:
                 time.sleep(float(resp.headers.get("Retry-After", 1 + attempt)))
                 continue
+            if resp.status_code == 401:
+                raise TMDBAuthError("TMDB rejected the token (401); check TMDB_READ_TOKEN")
             resp.raise_for_status()
             data = resp.json()
             self.cache.set(key, data, self.ttl)
@@ -52,7 +55,8 @@ class TMDBClient:
 
     # --- endpoints used by the pipeline ---------------------------------
     def search_movie(self, title: str, year: int | None = None) -> list[dict]:
-        params = {"query": title}
+        """`year` matches any release that year, not just the primary one."""
+        params: dict[str, Any] = {"query": title}
         if year:
             params["year"] = int(year)
         return self.get("/search/movie", **params).get("results", [])

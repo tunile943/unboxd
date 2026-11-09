@@ -8,14 +8,17 @@ Local dev:  uvicorn api.index:app --reload --port 8000
 
 from __future__ import annotations
 
-import math
-from typing import Literal
+from functools import cache
+from typing import Any, Literal
 
+import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from unboxd.config import CONFIG
 from unboxd.ingest import EXPORT_FILES, load_csvs
+from unboxd.resolve import resolve_films
+from unboxd.tmdb import TMDBAuthError, TMDBClient
 from unboxd.weights import compute_weights
 
 MAX_CSV_BYTES = 4_000_000  # Vercel rejects request bodies over 4.5 MB
@@ -49,6 +52,11 @@ class Film(BaseModel):
     last_watched: str | None = None
     weight: float | None = None
     tmdb_id: int | None = None
+    tmdb_title: str | None = None
+    tmdb_year: int | None = None
+    match_confidence: Literal["high", "low", "none"] | None = None
+    match_reason: str | None = None
+    candidates: list[dict[str, Any]] = []
 
 
 class ResolveRequest(BaseModel):
@@ -61,10 +69,22 @@ class RecommendRequest(BaseModel):
     k: int = Field(default=CONFIG.top_k, ge=1, le=50)
 
 
-def _clean(v):
-    if v is None or (isinstance(v, float) and math.isnan(v)):
+def _clean(v: Any) -> Any:
+    if isinstance(v, (list, dict)):
+        return v
+    if v is None or pd.isna(v):
         return None
-    return v
+    return v.item() if hasattr(v, "item") else v  # numpy scalar -> Python
+
+
+def records(df: pd.DataFrame) -> list[dict]:
+    return [{k: _clean(v) for k, v in row.items()}
+            for row in df.astype(object).to_dict(orient="records")]
+
+
+@cache
+def tmdb_client() -> TMDBClient:
+    return TMDBClient()
 
 
 @app.get("/api/health")
@@ -78,15 +98,21 @@ def parse_films(payload: ExportPayload) -> dict:
     films = load_csvs(payload.files)
     films["weight"] = compute_weights(films, CONFIG.weights)
     films["last_watched"] = films["last_watched"].dt.strftime("%Y-%m-%d")
-    records = [{k: _clean(v) for k, v in row.items()}
-               for row in films.astype(object).to_dict(orient="records")]
-    return {"films": records}
+    return {"films": records(films)}
 
 
 @app.post("/api/resolve")
 def resolve(req: ResolveRequest) -> dict:
-    """Attach tmdb_id + match_confidence to one batch of films."""
-    raise HTTPException(501, "resolve not implemented yet (unboxd/resolve.py)")
+    """Match one batch of films to TMDB."""
+    if not CONFIG.tmdb_token:
+        raise HTTPException(503, "TMDB token not configured")
+    films = pd.DataFrame([f.model_dump() for f in req.films], columns=list(Film.model_fields))
+    films["year"] = films["year"].astype("Int64")
+    try:
+        out = resolve_films(films, tmdb_client(), CONFIG.match)
+    except TMDBAuthError as e:
+        raise HTTPException(502, str(e)) from e
+    return {"films": records(out)}
 
 
 @app.post("/api/recommend")

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { type Film, parseFilms, readExport } from "@/lib/export";
+import { type Film, parseFilms, RESOLVE_BATCH, readExport, resolveFilms } from "@/lib/export";
 
 type Tab = "in" | "out" | "data";
 
@@ -10,6 +10,7 @@ export default function Home() {
   const [status, setStatus] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [tab, setTab] = useState<Tab>("in");
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -20,16 +21,22 @@ export default function Home() {
       setStatus("Unzipping your export…");
       const files = await readExport(file);
       setStatus("Weighting your films…");
-      setFilms(await parseFilms(files));
-      setStatus("");
+      const parsed = await parseFilms(files);
+      setStatus("Matching films on TMDB…");
+      setProgress({ done: 0, total: Math.ceil(parsed.length / RESOLVE_BATCH) });
+      setFilms(await resolveFilms(parsed, (done, total) => setProgress({ done, total })));
     } catch (err) {
-      setStatus("");
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setStatus("");
+      setProgress(null);
     }
   }
 
   const watched = films?.filter((f) => f.watched) ?? [];
   const rated = watched.filter((f) => f.rating !== null);
+  const unsure = films?.filter((f) => f.match_confidence === "low") ?? [];
+  const notFound = films?.filter((f) => f.match_confidence === "none") ?? [];
 
   return (
     <main>
@@ -48,7 +55,13 @@ export default function Home() {
         and nothing is stored.
       </p>
 
-      {status && <p>{status}</p>}
+      {status && (
+        <p>
+          {status}
+          {progress && ` batch ${progress.done}/${progress.total}`}
+        </p>
+      )}
+      {progress && <progress value={progress.done} max={progress.total} style={{ width: "100%" }} />}
       {error && <p className="error">{error}</p>}
 
       {films && (
@@ -56,6 +69,9 @@ export default function Home() {
           <p>
             {watched.length} films watched, {rated.length} rated,{" "}
             {films.filter((f) => f.on_watchlist).length} on your watchlist.
+            <br />
+            {films.length - unsure.length - notFound.length} matched on TMDB ·{" "}
+            {unsure.length + notFound.length} need review
           </p>
 
           <div className="tabs" role="tablist">
@@ -74,7 +90,12 @@ export default function Home() {
 
           {tab === "in" && <p className="muted">Comfort picks: coming soon.</p>}
           {tab === "out" && <p className="muted">Edge-of-taste picks: coming soon.</p>}
-          {tab === "data" && <FilmTable films={watched} />}
+          {tab === "data" && (
+            <>
+              <NeedsReview unsure={unsure} notFound={notFound} />
+              <FilmTable films={watched} />
+            </>
+          )}
         </>
       )}
 
@@ -83,6 +104,37 @@ export default function Home() {
         Letterboxd.
       </footer>
     </main>
+  );
+}
+
+const MATCH_MARK = { high: "✓", low: "?", none: "–" } as const;
+
+function NeedsReview({ unsure, notFound }: { unsure: Film[]; notFound: Film[] }) {
+  if (!unsure.length && !notFound.length) return null;
+  const group = (title: string, films: Film[]) =>
+    films.length > 0 && (
+      <>
+        <h3>
+          {title} ({films.length})
+        </h3>
+        <ul>
+          {films.map((f) => (
+            <li key={`${f.name}-${f.year}`}>
+              {f.name} <span className="muted">{f.year}</span>
+              {f.tmdb_id && ` → ${f.tmdb_title} (${f.tmdb_year ?? "?"})`}
+              <span className="muted"> · {f.match_reason}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  return (
+    <details>
+      <summary>Needs review ({unsure.length + notFound.length})</summary>
+      <p className="muted">Unchecked films still count, using our best guess.</p>
+      {group("Unsure", unsure)}
+      {group("Not found", notFound)}
+    </details>
   );
 }
 
@@ -99,6 +151,7 @@ function FilmTable({ films }: { films: Film[] }) {
             <th>Liked</th>
             <th className="num">Rewatches</th>
             <th className="num">w′</th>
+            <th>Match</th>
           </tr>
         </thead>
         <tbody>
@@ -111,6 +164,9 @@ function FilmTable({ films }: { films: Film[] }) {
               <td>{f.liked ? "♥" : ""}</td>
               <td className="num">{f.rewatch_count || ""}</td>
               <td className="num">{f.weight?.toFixed(2) ?? "—"}</td>
+              <td title={f.match_reason ?? undefined}>
+                {f.match_confidence ? MATCH_MARK[f.match_confidence] : ""}
+              </td>
             </tr>
           ))}
         </tbody>
