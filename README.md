@@ -36,7 +36,7 @@ npm run dev            # Next.js on :3000, FastAPI on :8000 (proxied at /api)
 pytest                 # add -m live to also hit the real TMDB API
 ```
 
-Check matching on a real export: `python scripts/match_report.py <export.zip>`. Refresh test fixtures: `python scripts/record_tmdb_fixtures.py`.
+Check matching on a real export: `python scripts/match_report.py <export.zip>`. Check Boxd In: `python scripts/recommend_report.py <export.zip> --loo`. Refresh test fixtures: `python scripts/record_tmdb_fixtures.py`.
 
 API docs while running locally: http://localhost:8000/api/docs
 
@@ -57,17 +57,26 @@ Python dependencies for the function come from `requirements.txt` (keep it in sy
 | Per-film weight w' in [-1, 1] | `unboxd/weights.py` | done |
 | API: `/api/films` | `api/index.py` | done |
 | API: `/api/resolve` (batched TMDB matching) | `api/index.py`, `lib/export.ts` | done |
-| API: `/api/recommend` | `api/index.py` | stub (501) |
+| API: `/api/recommend` (Boxd In) | `api/index.py`, `lib/export.ts` | done (Boxd Out: 501) |
 | TMDB client + swappable cache (Redis / SQLite) | `unboxd/tmdb.py`, `unboxd/cache.py` | done |
 | Title/year → TMDB id (movie, or TV series as fallback), confidence, reason, alternatives | `unboxd/resolve.py` | done |
-| Facet vectors (people / form / place / theme) | `unboxd/features.py` | TODO |
-| Taste profile per facet | `unboxd/profile.py` | TODO |
-| Boxd In (exploit) | `unboxd/boxd_in.py` | TODO |
+| Facet vectors (people / form / place / theme) | `unboxd/features.py` | done |
+| Taste profile per facet | `unboxd/profile.py` | done |
+| Boxd In (exploit) | `unboxd/boxd_in.py` | done |
 | Boxd Out (explore) | `unboxd/boxd_out.py` | TODO |
 | MMR diversification | `unboxd/diversify.py` | done |
-| Holdout evaluation | `unboxd/evaluate.py` | TODO |
+| Leave-one-out evaluation | `unboxd/evaluate.py` | done |
 
 Tunables (γ, λ, explore band, Bayesian m, ...) live in `unboxd/config.py`.
+
+### Boxd In
+
+TMDB recommendations of your top-rated films (top 15% by w′, ties included, 10–100 seeds) plus `/discover`
+results for your profile's favorite directors and keywords nominate candidates. Watched, unreleased and
+low-vote (< 50) films are dropped. Candidates are ranked by similarity to your taste profile, minus a
+penalty for TMDB collections you dislike on balance (average w′ ≤ −0.10, so mixed franchises aren't
+penalized), then diversified with MMR. Anti-seeds (penalizing films your least-liked films recommend) are implemented
+but off by default: in leave-one-out they didn't help, since dislikes already lower profile similarity.
 
 ### Weighting
 

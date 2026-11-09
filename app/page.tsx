@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { type Film, parseFilms, RESOLVE_BATCH, readExport, resolveFilms } from "@/lib/export";
+import { type Film, type Pick, parseFilms, RESOLVE_BATCH, readExport, recommend, resolveFilms } from "@/lib/export";
 
 type Tab = "in" | "out" | "data";
 
@@ -11,12 +11,14 @@ export default function Home() {
   const [error, setError] = useState<string>("");
   const [tab, setTab] = useState<Tab>("in");
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [picksIn, setPicksIn] = useState<Pick[] | null>(null);
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setError("");
     setFilms(null);
+    setPicksIn(null);
     try {
       setStatus("Unzipping your export…");
       const files = await readExport(file);
@@ -24,7 +26,11 @@ export default function Home() {
       const parsed = await parseFilms(files);
       setStatus("Matching films on TMDB…");
       setProgress({ done: 0, total: Math.ceil(parsed.length / RESOLVE_BATCH) });
-      setFilms(await resolveFilms(parsed, (done, total) => setProgress({ done, total })));
+      const resolved = await resolveFilms(parsed, (done, total) => setProgress({ done, total }));
+      setFilms(resolved);
+      setProgress(null);
+      setStatus("Packing your Boxd In…");
+      setPicksIn(await recommend(resolved, "in"));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -88,7 +94,7 @@ export default function Home() {
             ))}
           </div>
 
-          {tab === "in" && <p className="muted">Comfort picks: coming soon.</p>}
+          {tab === "in" && <PickList description="More of what you love." picks={picksIn} />}
           {tab === "out" && <p className="muted">Edge-of-taste picks: coming soon.</p>}
           {tab === "data" && (
             <>
@@ -108,6 +114,35 @@ export default function Home() {
 }
 
 const MATCH_MARK = { high: "✓", low: "?", none: "–" } as const;
+
+function PickList({ description, picks }: { description: string; picks: Pick[] | null }) {
+  return (
+    <>
+      <p className="muted">{description}</p>
+      {picks === null ? (
+        <p className="muted">Packing…</p>
+      ) : (
+        <ol className="picks">
+          {picks.map((p) => (
+            <li key={p.tmdb_id}>
+              {p.poster_path ? (
+                <img src={`https://image.tmdb.org/t/p/w92${p.poster_path}`} alt="" width={46} height={69} />
+              ) : (
+                <span className="poster-placeholder" />
+              )}
+              <div>
+                <strong>{p.title}</strong> <span className="muted">{p.year}</span>
+                {p.on_watchlist && <span className="badge">★ on your watchlist</span>}
+                <br />
+                <span className="muted">{p.reason}</span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </>
+  );
+}
 
 function NeedsReview({ unsure, notFound }: { unsure: Film[]; notFound: Film[] }) {
   if (!unsure.length && !notFound.length) return null;

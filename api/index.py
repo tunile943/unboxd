@@ -15,6 +15,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
+from unboxd import boxd_in
 from unboxd.config import CONFIG
 from unboxd.ingest import EXPORT_FILES, load_csvs
 from unboxd.resolve import resolve_films
@@ -83,6 +84,13 @@ def records(df: pd.DataFrame) -> list[dict]:
             for row in df.astype(object).to_dict(orient="records")]
 
 
+def _frame(films: list[Film]) -> pd.DataFrame:
+    df = pd.DataFrame([f.model_dump() for f in films], columns=list(Film.model_fields))
+    df["year"] = df["year"].astype("Int64")
+    df["last_watched"] = pd.to_datetime(df["last_watched"])
+    return df
+
+
 @cache
 def tmdb_client() -> TMDBClient:
     return TMDBClient()
@@ -107,10 +115,8 @@ def resolve(req: ResolveRequest) -> dict:
     """Match one batch of films to TMDB."""
     if not CONFIG.tmdb_token:
         raise HTTPException(503, "TMDB token not configured")
-    films = pd.DataFrame([f.model_dump() for f in req.films], columns=list(Film.model_fields))
-    films["year"] = films["year"].astype("Int64")
     try:
-        out = resolve_films(films, tmdb_client(), CONFIG.match)
+        out = resolve_films(_frame(req.films), tmdb_client(), CONFIG.match)
     except TMDBAuthError as e:
         raise HTTPException(502, str(e)) from e
     return {"films": records(out)}
@@ -119,4 +125,13 @@ def resolve(req: ResolveRequest) -> dict:
 @app.post("/api/recommend")
 def recommend(req: RecommendRequest) -> dict:
     """Boxd In (mode='in') or Boxd Out (mode='out')."""
-    raise HTTPException(501, f"Boxd {'In' if req.mode == 'in' else 'Out'} not implemented yet")
+    if req.mode == "out":
+        raise HTTPException(501, "Boxd Out not implemented yet")
+    if not CONFIG.tmdb_token:
+        raise HTTPException(503, "TMDB token not configured")
+    try:
+        picks = boxd_in.recommend(_frame(req.films), tmdb_client(), CONFIG.recommend, k=req.k,
+                                  mmr_lambda=CONFIG.mmr_lambda)
+    except TMDBAuthError as e:
+        raise HTTPException(502, str(e)) from e
+    return {"picks": records(picks)}

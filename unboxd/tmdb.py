@@ -69,7 +69,8 @@ class TMDBClient:
         return self.get("/search/tv", **params).get("results", [])
 
     def tv_details(self, tv_id: int) -> dict:
-        return self.get(f"/tv/{tv_id}")
+        """Details + aggregate credits + keywords (one cached call for matching and features)."""
+        return self.get(f"/tv/{tv_id}", append_to_response="aggregate_credits,keywords")
 
     def details(self, movie_id: int) -> dict:
         """Details + credits + keywords in one call."""

@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 
-FIXTURES = json.loads((Path(__file__).parent / "fixtures" / "tmdb_search.json").read_text())
+FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURES = json.loads((FIXTURE_DIR / "tmdb_search.json").read_text())
+BOXD_IN_FIXTURES = json.loads((FIXTURE_DIR / "tmdb_boxd_in.json").read_text())
 
 
 class FakeTMDB:
@@ -30,6 +32,32 @@ class FakeTMDB:
     def tv_details(self, tv_id):
         self.calls.append(("tvd", tv_id))
         return self.responses.get(f"tvd|{tv_id}", {})
+
+    def details(self, movie_id):
+        self.calls.append(("md", movie_id))
+        return self.responses.get(f"md|{movie_id}", {})
+
+    def recommendations(self, movie_id, page=1):
+        self.calls.append(("rec", movie_id))
+        return self.responses.get(f"rec|{movie_id}", [])
+
+    def discover(self, **filters):
+        self.calls.append(("disc", filters))
+        return self.responses.get(f"disc|{json.dumps(filters, sort_keys=True)}", [])
+
+
+def movie(director="", genres=(), keywords=(), cast=(), year=2000, country="US", lang="en"):
+    """Hand-built /movie details with only the fields features.py reads."""
+    return {"release_date": f"{year}-01-01", "origin_country": [country], "original_language": lang,
+            "genres": [{"name": g} for g in genres],
+            "credits": {"crew": [{"id": 1, "name": director, "job": "Director"}] if director else [],
+                        "cast": [{"name": c, "order": i} for i, c in enumerate(cast)]},
+            "keywords": {"keywords": [{"id": i, "name": k} for i, k in enumerate(keywords)]}}
+
+
+def rec(id, title="", year=2000, votes=500):
+    return {"id": id, "title": title or f"Film {id}", "release_date": f"{year}-01-01",
+            "vote_count": votes, "media_type": "movie"}
 
 
 @pytest.fixture

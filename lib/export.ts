@@ -34,6 +34,15 @@ export type Film = {
   }[];
 };
 
+export type Pick = {
+  tmdb_id: number;
+  title: string;
+  year: number;
+  poster_path: string | null;
+  reason: string;
+  on_watchlist: boolean;
+};
+
 export const RESOLVE_BATCH = 100;
 
 /** Unzip a Letterboxd export locally and return {export path: CSV text}. */
@@ -91,4 +100,9 @@ export async function resolveFilms(
     onProgress(i + 1, total);
   }
   return out;
+}
+
+export async function recommend(films: Film[], mode: "in" | "out"): Promise<Pick[]> {
+  const slim = films.map(({ candidates, ...f }) => f); // alternatives aren't needed and bloat the request
+  return (await post<{ picks: Pick[] }>("/api/recommend", { mode, films: slim })).picks;
 }

@@ -47,12 +47,35 @@ class MatchConfig:
 
 
 @dataclass(frozen=True)
+class RecommendConfig:
+    seed_pct: float = 0.15  # top (and, for anti-seeds, bottom) share of rated films, ties included
+    min_seeds: int = 10
+    max_seeds: int = 100
+    anti_min_seeds: int = 5
+    anti_max_seeds: int = 50
+    anti_weight: float = 0.0  # off: didn't help in leave-one-out; a dislike already lowers profile similarity
+    discover_people: int = 5  # profile's top directors -> /discover
+    discover_keywords: int = 5  # profile's top keywords -> /discover
+    min_votes: int = 50  # quality floor for candidates
+    max_candidates: int = 300
+    rec_weight: float = 0.0  # TMDB recs nominate, the profile ranks (best in leave-one-out)
+    facet_weights: dict[str, float] = field(
+        default_factory=lambda: {"people": 0.3, "form": 0.25, "place": 0.15, "theme": 0.3})
+    profile_min_abs_weight: float = 0.05  # near-neutral films barely move the profile
+    franchise_weight: float = 1.0  # penalty per unit of net dislike for a TMDB collection
+    franchise_dead_zone: float = 0.10  # net w' above -0.10 ("it was fine") isn't a dislike
+    mmr_pool: int = 100
+    workers: int = 8
+
+
+@dataclass(frozen=True)
 class Config:
     tmdb_token: str = field(default_factory=lambda: os.getenv("TMDB_READ_TOKEN", ""))
     cache_path: Path = DATA_DIR / "tmdb_cache.sqlite"
     weights: WeightConfig = field(default_factory=WeightConfig)
     explore: ExploreConfig = field(default_factory=ExploreConfig)
     match: MatchConfig = field(default_factory=MatchConfig)
+    recommend: RecommendConfig = field(default_factory=RecommendConfig)
     top_k: int = 20
     mmr_lambda: float = 0.7  # relevance vs. diversity trade-off
 
