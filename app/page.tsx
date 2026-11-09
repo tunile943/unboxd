@@ -166,6 +166,7 @@ function FilmTable({ films }: { films: Film[] }) {
               <td className="num">{f.weight?.toFixed(2) ?? "—"}</td>
               <td title={f.match_reason ?? undefined}>
                 {f.match_confidence ? MATCH_MARK[f.match_confidence] : ""}
+                {f.media_type === "tv" && <span className="muted"> TV</span>}
               </td>
             </tr>
           ))}

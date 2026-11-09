@@ -1806,5 +1806,713 @@
   }
  ],
  "Zzqx Nonexistent Film|2020": [],
- "Zzqx Nonexistent Film|None": []
+ "Zzqx Nonexistent Film|None": [],
+ "The Penguin|2024": [
+  {
+   "id": 1086497,
+   "title": "The Penguin Lessons",
+   "original_title": "The Penguin Lessons",
+   "release_date": "2025-03-27",
+   "popularity": 1.9831,
+   "vote_count": 186,
+   "poster_path": "/pJUfkCcU5mCEMF8O0LKvlMnYAfD.jpg"
+  },
+  {
+   "id": 1412057,
+   "title": "The Magic Penguin",
+   "original_title": "The Magic Penguin",
+   "release_date": "2024-12-17",
+   "popularity": 0.359,
+   "vote_count": 2,
+   "poster_path": "/fay7Tewv1lgkiym0CqOdagFBOW8.jpg"
+  },
+  {
+   "id": 1171004,
+   "title": "The Chaos Sisters feat. Penguin Paul",
+   "original_title": "Die Chaosschwestern und Pinguin Paul",
+   "release_date": "2024-01-25",
+   "popularity": 0.5484,
+   "vote_count": 8,
+   "poster_path": "/m9wmyNhdDK4jSsJfZknR5RWjZJU.jpg"
+  },
+  {
+   "id": 1159799,
+   "title": "My Penguin Friend",
+   "original_title": "My Penguin Friend",
+   "release_date": "2024-08-07",
+   "popularity": 1.7435,
+   "vote_count": 208,
+   "poster_path": "/65ll0fwaCMDHuD5XMJk4f4Olc5b.jpg"
+  }
+ ],
+ "tv|The Penguin|2024": [
+  {
+   "id": 194764,
+   "name": "The Penguin",
+   "original_name": "The Penguin",
+   "first_air_date": "2024-09-19",
+   "popularity": 18.2041,
+   "vote_count": 1573,
+   "poster_path": "/vOWcqC4oDQws1doDWLO7d3dh5qc.jpg"
+  },
+  {
+   "id": 252747,
+   "name": "The Mothers of Penguins",
+   "original_name": "Matki Pingwinów",
+   "first_air_date": "2024-11-13",
+   "popularity": 5.1792,
+   "vote_count": 23,
+   "poster_path": "/1pBeRmqnMEGlBgpjPK0OYqPw6Kg.jpg"
+  },
+  {
+   "id": 271953,
+   "name": "Meet The Penguins",
+   "original_name": "Meet The Penguins",
+   "first_air_date": "2024-09-19",
+   "popularity": 0.0697,
+   "vote_count": 0,
+   "poster_path": null
+  }
+ ],
+ "The Penguin|None": [
+  {
+   "id": 1086497,
+   "title": "The Penguin Lessons",
+   "original_title": "The Penguin Lessons",
+   "release_date": "2025-03-27",
+   "popularity": 1.9831,
+   "vote_count": 186,
+   "poster_path": "/pJUfkCcU5mCEMF8O0LKvlMnYAfD.jpg"
+  },
+  {
+   "id": 54648,
+   "title": "The Pebble and the Penguin",
+   "original_title": "The Pebble and the Penguin",
+   "release_date": "1995-04-12",
+   "popularity": 1.8295,
+   "vote_count": 140,
+   "poster_path": "/aWi36nNbyMw51yGN0tTSOrOLu6L.jpg"
+  },
+  {
+   "id": 148686,
+   "title": "The Penguin King",
+   "original_title": "The Penguin King",
+   "release_date": "2012-10-23",
+   "popularity": 0.5603,
+   "vote_count": 12,
+   "poster_path": "/cYSEXPwg5bAbooZgIRjWdT03x9r.jpg"
+  },
+  {
+   "id": 1628532,
+   "title": "The Penguin",
+   "original_title": "The Penguin",
+   "release_date": "2026-01-30",
+   "popularity": 0.0835,
+   "vote_count": 0,
+   "poster_path": null
+  },
+  {
+   "id": 236169,
+   "title": "The Penguin Parade",
+   "original_title": "The Penguin Parade",
+   "release_date": "1938-04-23",
+   "popularity": 0.1813,
+   "vote_count": 6,
+   "poster_path": "/rWLXrSg2jC64ag4L7hpuE1apxwm.jpg"
+  },
+  {
+   "id": 84971,
+   "title": "The Penguin Pool Murder",
+   "original_title": "The Penguin Pool Murder",
+   "release_date": "1932-12-09",
+   "popularity": 0.7623,
+   "vote_count": 19,
+   "poster_path": "/5JsNPCnbNjxYDLh9t1eXgZGnHB4.jpg"
+  },
+  {
+   "id": 732333,
+   "title": "Peter the Penguin",
+   "original_title": "Peter the Penguin",
+   "release_date": "2020-10-05",
+   "popularity": 0.2622,
+   "vote_count": 2,
+   "poster_path": "/8kRnYc0QYT1z0EbbMwaVOvg5gAs.jpg"
+  },
+  {
+   "id": 1517326,
+   "title": "The Penguin",
+   "original_title": "البطريق",
+   "release_date": "2006-01-01",
+   "popularity": 0.4609,
+   "vote_count": 0,
+   "poster_path": "/wsompcR0mUtbuWfiTn22Hq3A9nb.jpg"
+  },
+  {
+   "id": 453385,
+   "title": "The Penguin Counters",
+   "original_title": "The Penguin Counters",
+   "release_date": "2017-04-21",
+   "popularity": 0.3301,
+   "vote_count": 0,
+   "poster_path": "/jV4BMhnCQdE4u5Upqo3GefIEoXY.jpg"
+  },
+  {
+   "id": 1412057,
+   "title": "The Magic Penguin",
+   "original_title": "The Magic Penguin",
+   "release_date": "2024-12-17",
+   "popularity": 0.359,
+   "vote_count": 2,
+   "poster_path": "/fay7Tewv1lgkiym0CqOdagFBOW8.jpg"
+  },
+  {
+   "id": 1235000,
+   "title": "The African Penguin",
+   "original_title": "The African Penguin",
+   "release_date": "2009-10-03",
+   "popularity": 0.1256,
+   "vote_count": 0,
+   "poster_path": "/xTUY6k5p4QkokIuKUNxDyNMVh4n.jpg"
+  },
+  {
+   "id": 143993,
+   "title": "The Cold-blooded Penguin",
+   "original_title": "The Cold-blooded Penguin",
+   "release_date": "1944-07-21",
+   "popularity": 0.4963,
+   "vote_count": 10,
+   "poster_path": "/rgR4QjAFzl3dMrmOPseJ0aOfDms.jpg"
+  },
+  {
+   "id": 1578574,
+   "title": "The Penguin Dad",
+   "original_title": "Pingvinpappan",
+   "release_date": "2025-01-14",
+   "popularity": 0.6394,
+   "vote_count": 0,
+   "poster_path": "/7YSIuNbeodV0QY3aR1fsTNKwr5C.jpg"
+  },
+  {
+   "id": 1806071,
+   "title": "Perry the Christmas Penguin",
+   "original_title": "Perry the Christmas Penguin",
+   "release_date": "2026-11-26",
+   "popularity": 0.2178,
+   "vote_count": 0,
+   "poster_path": "/rvaRfuJ0rTrzxrcDgYKbcrMdYSO.jpg"
+  },
+  {
+   "id": 134644,
+   "title": "The Adventures of Scooter the Penguin",
+   "original_title": "The Adventures of Scooter the Penguin",
+   "release_date": "2012-10-09",
+   "popularity": 0.4736,
+   "vote_count": 1,
+   "poster_path": null
+  },
+  {
+   "id": 1433154,
+   "title": "Death and the Penguin",
+   "original_title": "Death and the Penguin",
+   "release_date": "",
+   "popularity": 0.1969,
+   "vote_count": 0,
+   "poster_path": null
+  },
+  {
+   "id": 438405,
+   "title": "The Little Penguin",
+   "original_title": "Пингвинёнок",
+   "release_date": "1983-01-31",
+   "popularity": 0.2851,
+   "vote_count": 0,
+   "poster_path": null
+  },
+  {
+   "id": 348909,
+   "title": "Batman Returns: The Bat, the Cat, and the Penguin",
+   "original_title": "Batman Returns: The Bat, the Cat, and the Penguin",
+   "release_date": "1992-06-17",
+   "popularity": 0.9813,
+   "vote_count": 16,
+   "poster_path": "/ye1aMj92R1RG4lonmNKhvwWUFgI.jpg"
+  },
+  {
+   "id": 284431,
+   "title": "The Penguins of Madagascar - Operation: Penguin Takeover",
+   "original_title": "The Penguins of Madagascar - Operation: Penguin Takeover",
+   "release_date": "2014-07-22",
+   "popularity": 1.1112,
+   "vote_count": 14,
+   "poster_path": "/1DfE3Jt4evLrcvXdPD1nGpEPi50.jpg"
+  },
+  {
+   "id": 56391,
+   "title": "The Adventures of Scamper the Penguin",
+   "original_title": "Приключения пингвинёнка Лоло",
+   "release_date": "1987-06-26",
+   "popularity": 0.8624,
+   "vote_count": 40,
+   "poster_path": "/zr4vrqU2i6ATJ73l9nkZwJl7Gyo.jpg"
+  }
+ ],
+ "tv|The Penguin|None": [
+  {
+   "id": 194764,
+   "name": "The Penguin",
+   "original_name": "The Penguin",
+   "first_air_date": "2024-09-19",
+   "popularity": 18.2041,
+   "vote_count": 1573,
+   "poster_path": "/vOWcqC4oDQws1doDWLO7d3dh5qc.jpg"
+  },
+  {
+   "id": 19845,
+   "name": "Pororo the Little Penguin",
+   "original_name": "뽀롱뽀롱 뽀로로",
+   "first_air_date": "2003-11-27",
+   "popularity": 12.9836,
+   "vote_count": 9,
+   "poster_path": "/oD2r5c3IG4C6RDx847tG8OtLutK.jpg"
+  },
+  {
+   "id": 71514,
+   "name": "Jasper the Penguin",
+   "original_name": "Jasper, der Pinguin",
+   "first_air_date": "2003-03-03",
+   "popularity": 3.0173,
+   "vote_count": 3,
+   "poster_path": "/m4yT420c2lSYqNRON2PIMM6HGUU.jpg"
+  },
+  {
+   "id": 14196,
+   "name": "Agent Z and the Penguin from Mars",
+   "original_name": "Agent Z and the Penguin from Mars",
+   "first_air_date": "1996-01-03",
+   "popularity": 1.5646,
+   "vote_count": 2,
+   "poster_path": "/lVTepJD1tC3LNMCoInIihGQcazq.jpg"
+  },
+  {
+   "id": 203775,
+   "name": "The Great Penguin Rescue",
+   "original_name": "The Great Penguin Rescue",
+   "first_air_date": "2013-11-01",
+   "popularity": 0.0986,
+   "vote_count": 0,
+   "poster_path": null
+  },
+  {
+   "id": 44607,
+   "name": "Manmaru The Ninja Penguin",
+   "original_name": "忍ペンまん丸",
+   "first_air_date": "1997-07-05",
+   "popularity": 0.509,
+   "vote_count": 1,
+   "poster_path": null
+  },
+  {
+   "id": 243650,
+   "name": "The Adventures of Little Penguin",
+   "original_name": "The Adventures of Little Penguin",
+   "first_air_date": "2023-01-30",
+   "popularity": 0.4952,
+   "vote_count": 0,
+   "poster_path": "/b33wvsbLJ0qeYxGAddxzB5Pu9VB.jpg"
+  },
+  {
+   "id": 7869,
+   "name": "The Penguins of Madagascar",
+   "original_name": "The Penguins of Madagascar",
+   "first_air_date": "2008-11-28",
+   "popularity": 33.8528,
+   "vote_count": 476,
+   "poster_path": "/1fRG81M83HgwupmndtgZQOBHh8o.jpg"
+  },
+  {
+   "id": 218275,
+   "name": "Secrets of the Penguins",
+   "original_name": "Secrets of the Penguins",
+   "first_air_date": "2025-04-20",
+   "popularity": 3.5934,
+   "vote_count": 23,
+   "poster_path": "/xpUSOwdESEcd1OSUqEjyJYNzLz6.jpg"
+  },
+  {
+   "id": 252747,
+   "name": "The Mothers of Penguins",
+   "original_name": "Matki Pingwinów",
+   "first_air_date": "2024-11-13",
+   "popularity": 5.1792,
+   "vote_count": 23,
+   "poster_path": "/1pBeRmqnMEGlBgpjPK0OYqPw6Kg.jpg"
+  },
+  {
+   "id": 76546,
+   "name": "Penguins: Spy in the Huddle",
+   "original_name": "Penguins: Spy in the Huddle",
+   "first_air_date": "2013-02-11",
+   "popularity": 1.5515,
+   "vote_count": 11,
+   "poster_path": "/t2sieAl8HKq7QeflubPwo2SvwJS.jpg"
+  },
+  {
+   "id": 271953,
+   "name": "Meet The Penguins",
+   "original_name": "Meet The Penguins",
+   "first_air_date": "2024-09-19",
+   "popularity": 0.0697,
+   "vote_count": 0,
+   "poster_path": null
+  },
+  {
+   "id": 53199,
+   "name": "Pittsburgh Penguins: In the Room",
+   "original_name": "Pittsburgh Penguins: In the Room",
+   "first_air_date": "",
+   "popularity": 0.1308,
+   "vote_count": 0,
+   "poster_path": "/xI2l6bAHaxPDZ3hy49ZcwsHApZ.jpg"
+  },
+  {
+   "id": 198073,
+   "name": "バケツでごはん",
+   "original_name": "バケツでごはん",
+   "first_air_date": "1996-01-08",
+   "popularity": 2.1322,
+   "vote_count": 1,
+   "poster_path": "/zARo1DDYvArOXvWFT0vGGwG1rmK.jpg"
+  },
+  {
+   "id": 60817,
+   "name": "Daimidaler: Prince vs Penguin Empire",
+   "original_name": "健全ロボ ダイミダラー",
+   "first_air_date": "2014-04-05",
+   "popularity": 4.8725,
+   "vote_count": 18,
+   "poster_path": "/7becJ8vETWWXH6p40efr44APCvo.jpg"
+  }
+ ],
+ "Watchmen|2019": [
+  {
+   "id": 13183,
+   "title": "Watchmen",
+   "original_title": "Watchmen",
+   "release_date": "2009-03-04",
+   "popularity": 9.5017,
+   "vote_count": 10393,
+   "poster_path": "/aVURelN3pM56lFM7Dgfs5TixcIf.jpg"
+  },
+  {
+   "id": 684453,
+   "title": "#387",
+   "original_title": "Numéro 387",
+   "release_date": "2019-11-23",
+   "popularity": 0.6764,
+   "vote_count": 3,
+   "poster_path": "/lLFA42mBVpQ0NZDg8ONv9a0onKm.jpg"
+  }
+ ],
+ "tv|Watchmen|2019": [
+  {
+   "id": 79788,
+   "name": "Watchmen",
+   "original_name": "Watchmen",
+   "first_air_date": "2019-10-20",
+   "popularity": 11.8864,
+   "vote_count": 1725,
+   "poster_path": "/m8rWq3j73ZGhDuSCZWMMoE9ePH1.jpg"
+  }
+ ],
+ "Watchmen|None": [
+  {
+   "id": 13183,
+   "title": "Watchmen",
+   "original_title": "Watchmen",
+   "release_date": "2009-03-04",
+   "popularity": 9.5017,
+   "vote_count": 10393,
+   "poster_path": "/aVURelN3pM56lFM7Dgfs5TixcIf.jpg"
+  },
+  {
+   "id": 1155058,
+   "title": "Watchmen: Chapter I",
+   "original_title": "Watchmen: Chapter I",
+   "release_date": "2024-08-12",
+   "popularity": 2.8115,
+   "vote_count": 260,
+   "poster_path": "/tE2vZ6HdlmKaBh0wpsvHCf7HJKo.jpg"
+  },
+  {
+   "id": 1299652,
+   "title": "Watchmen: Chapter II",
+   "original_title": "Watchmen: Chapter II",
+   "release_date": "2024-11-25",
+   "popularity": 2.5057,
+   "vote_count": 191,
+   "poster_path": "/4rBObJFpiWJOG7aIlRrOUniAkBs.jpg"
+  },
+  {
+   "id": 343072,
+   "title": "Watchmen",
+   "original_title": "Watchmen",
+   "release_date": "2001-06-04",
+   "popularity": 0.476,
+   "vote_count": 9,
+   "poster_path": "/szioy140IJ9BLVBacB23OP4BQ1.jpg"
+  },
+  {
+   "id": 398798,
+   "title": "The Night Watchmen",
+   "original_title": "The Night Watchmen",
+   "release_date": "2017-03-04",
+   "popularity": 0.7834,
+   "vote_count": 149,
+   "poster_path": "/xDS6R22AYxP1TvsEjstwhZrTYio.jpg"
+  },
+  {
+   "id": 433354,
+   "title": "The Watchmen",
+   "original_title": "The Watchmen",
+   "release_date": "2017-09-08",
+   "popularity": 0.5565,
+   "vote_count": 0,
+   "poster_path": "/5hjcLRoK68oTwFRq07feVCASZnh.jpg"
+  },
+  {
+   "id": 331113,
+   "title": "The Night Watchmen",
+   "original_title": "Jamais de la vie",
+   "release_date": "2015-04-08",
+   "popularity": 0.5687,
+   "vote_count": 35,
+   "poster_path": "/k3lbR60zV5TqEMwNGD6irBSJQ1c.jpg"
+  },
+  {
+   "id": 1341068,
+   "title": "HBO backstories - WATCHMEN",
+   "original_title": "HBO backstories - WATCHMEN",
+   "release_date": "",
+   "popularity": 0.2322,
+   "vote_count": 0,
+   "poster_path": "/fRCFyv1KnLoJgUtjIB0qe9bnwHb.jpg"
+  },
+  {
+   "id": 272415,
+   "title": "Watchmen of Dawn",
+   "original_title": "Şafak Bekçileri",
+   "release_date": "1963-10-14",
+   "popularity": 0.283,
+   "vote_count": 4,
+   "poster_path": "/lAtCEGbk0JfYliLOWKxfkDF2Rfp.jpg"
+  },
+  {
+   "id": 1770253,
+   "title": "The Watchmen in Qinling Mountains",
+   "original_title": "爷爷的牛背梁",
+   "release_date": "2023-08-08",
+   "popularity": 0.3858,
+   "vote_count": 0,
+   "poster_path": "/uYI3sEi0LVyB50WwKCJelHlX7xG.jpg"
+  },
+  {
+   "id": 1820036,
+   "title": "Watchmen: The Ultimate Cut",
+   "original_title": "Watchmen: The Ultimate Cut",
+   "release_date": "2009-11-10",
+   "popularity": 0.1945,
+   "vote_count": 0,
+   "poster_path": "/ghyQiaCjPsu6k14UE7hDftaBtT5.jpg"
+  },
+  {
+   "id": 1692289,
+   "title": "Story Within a Story: The Books of Watchmen",
+   "original_title": "Story Within a Story: The Books of Watchmen",
+   "release_date": "2009-11-03",
+   "popularity": 0.6775,
+   "vote_count": 0,
+   "poster_path": "/wlpg7PO2SWnKycdUKa6EAsV4mq7.jpg"
+  },
+  {
+   "id": 1678360,
+   "title": "Tell the Watchmen Not to Let Sleep Deceive",
+   "original_title": "بگهبانان را بگو تا خواب نفریبد",
+   "release_date": "1970-01-01",
+   "popularity": 0.2836,
+   "vote_count": 0,
+   "poster_path": "/wvds06DRs155v3PUwhLTilZown.jpg"
+  },
+  {
+   "id": 684453,
+   "title": "#387",
+   "original_title": "Numéro 387",
+   "release_date": "2019-11-23",
+   "popularity": 0.6764,
+   "vote_count": 3,
+   "poster_path": "/lLFA42mBVpQ0NZDg8ONv9a0onKm.jpg"
+  },
+  {
+   "id": 51239,
+   "title": "Paradox",
+   "original_title": "Paradox",
+   "release_date": "2010-11-19",
+   "popularity": 0.7017,
+   "vote_count": 22,
+   "poster_path": "/aYR9jDH3fFTdPVreFKfaavTCscn.jpg"
+  },
+  {
+   "id": 41207,
+   "title": "Under the Hood",
+   "original_title": "Under the Hood",
+   "release_date": "2009-03-24",
+   "popularity": 0.8706,
+   "vote_count": 51,
+   "poster_path": "/1d7s4eC0RX8s4mhVrGW5lgnOpi8.jpg"
+  },
+  {
+   "id": 16440,
+   "title": "Tales of the Black Freighter",
+   "original_title": "Tales of the Black Freighter",
+   "release_date": "2009-03-24",
+   "popularity": 1.6415,
+   "vote_count": 229,
+   "poster_path": "/vpZNACLrZC7EeZc0iCpnCsewZEO.jpg"
+  }
+ ],
+ "tv|Watchmen|None": [
+  {
+   "id": 79788,
+   "name": "Watchmen",
+   "original_name": "Watchmen",
+   "first_air_date": "2019-10-20",
+   "popularity": 11.8864,
+   "vote_count": 1725,
+   "poster_path": "/m8rWq3j73ZGhDuSCZWMMoE9ePH1.jpg"
+  },
+  {
+   "id": 239000,
+   "name": "Knight Watchmen",
+   "original_name": "Knight Watchmen",
+   "first_air_date": "2022-11-13",
+   "popularity": 1.0586,
+   "vote_count": 2,
+   "poster_path": "/eh9wenDh9eluHZunOVghH11ugpq.jpg"
+  },
+  {
+   "id": 18096,
+   "name": "Watchmen: Motion Comic",
+   "original_name": "Watchmen: Motion Comic",
+   "first_air_date": "2008-07-17",
+   "popularity": 1.7063,
+   "vote_count": 61,
+   "poster_path": "/mYvGHpaFWwu8w4E31VF6mjruoDY.jpg"
+  },
+  {
+   "id": 286790,
+   "name": "Maoshan Watchmen",
+   "original_name": "茅山打更人",
+   "first_air_date": "2025-03-31",
+   "popularity": 0.5162,
+   "vote_count": 1,
+   "poster_path": "/g9DbLROwbzqM98MdHAEO1tsz27f.jpg"
+  }
+ ],
+ "Secret Invasion|2023": [
+  {
+   "id": 1165500,
+   "title": "Marvel Studios Assembled: The Making of Secret Invasion",
+   "original_title": "Marvel Studios Assembled: The Making of Secret Invasion",
+   "release_date": "2023-09-19",
+   "popularity": 1.4311,
+   "vote_count": 31,
+   "poster_path": "/8YDNwj9gsAQlcHQALPtjJipoGx8.jpg"
+  }
+ ],
+ "tv|Secret Invasion|2023": [
+  {
+   "id": 114472,
+   "name": "Secret Invasion",
+   "original_name": "Secret Invasion",
+   "first_air_date": "2023-06-21",
+   "popularity": 11.7257,
+   "vote_count": 1496,
+   "poster_path": "/3rINdUPSy9AklJg74jWHOyUXuZd.jpg"
+  }
+ ],
+ "Secret Invasion|None": [
+  {
+   "id": 29032,
+   "title": "The Secret Invasion",
+   "original_title": "The Secret Invasion",
+   "release_date": "1964-09-16",
+   "popularity": 1.0384,
+   "vote_count": 54,
+   "poster_path": "/3AhywIKyyom2ec8RgDxy2wTEGyg.jpg"
+  },
+  {
+   "id": 1818827,
+   "title": "Avengers: Secret Invasion",
+   "original_title": "Avengers: Secret Invasion",
+   "release_date": "2027-12-31",
+   "popularity": 0.1931,
+   "vote_count": 0,
+   "poster_path": null
+  },
+  {
+   "id": 1165500,
+   "title": "Marvel Studios Assembled: The Making of Secret Invasion",
+   "original_title": "Marvel Studios Assembled: The Making of Secret Invasion",
+   "release_date": "2023-09-19",
+   "popularity": 1.4311,
+   "vote_count": 31,
+   "poster_path": "/8YDNwj9gsAQlcHQALPtjJipoGx8.jpg"
+  },
+  {
+   "id": 1818834,
+   "title": "Avengers Declassified: Secret Invasion",
+   "original_title": "Avengers Declassified: Secret Invasion",
+   "release_date": "2027-12-31",
+   "popularity": 0.2067,
+   "vote_count": 0,
+   "poster_path": null
+  },
+  {
+   "id": 57886,
+   "title": "Secret Space II: Alien Invasion",
+   "original_title": "Secret Space II: Alien Invasion",
+   "release_date": "",
+   "popularity": 0.0749,
+   "vote_count": 1,
+   "poster_path": null
+  },
+  {
+   "id": 300386,
+   "title": "Justice League: Secret Origins",
+   "original_title": "Justice League: Secret Origins",
+   "release_date": "2001-11-17",
+   "popularity": 1.4193,
+   "vote_count": 127,
+   "poster_path": "/4pfH0wH9hDETB06Y62MITnjBkY9.jpg"
+  },
+  {
+   "id": 28506,
+   "title": "A.I. Assault",
+   "original_title": "A.I. Assault",
+   "release_date": "2006-09-11",
+   "popularity": 1.0629,
+   "vote_count": 54,
+   "poster_path": "/vmZBuUV9h3zI95tjyvC1SO1aeym.jpg"
+  }
+ ],
+ "tv|Secret Invasion|None": [
+  {
+   "id": 114472,
+   "name": "Secret Invasion",
+   "original_name": "Secret Invasion",
+   "first_air_date": "2023-06-21",
+   "popularity": 11.7257,
+   "vote_count": 1496,
+   "poster_path": "/3rINdUPSy9AklJg74jWHOyUXuZd.jpg"
+  }
+ ]
 }

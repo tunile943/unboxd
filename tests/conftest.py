@@ -13,13 +13,19 @@ class FakeTMDB:
                  error: Exception | None = None):
         self.responses = FIXTURES if responses is None else responses
         self.fail, self.error = fail, error
-        self.calls: list[tuple[str, int | None]] = []
+        self.calls: list[tuple] = []
 
     def search_movie(self, title, year=None):
         self.calls.append((title, year))
         if title in self.fail:
             raise self.error
         return self.responses.get(f"{title}|{year}", [])
+
+    def search_tv(self, title, year=None):
+        self.calls.append(("tv", title, year))
+        if title in self.fail:
+            raise self.error
+        return self.responses.get(f"tv|{title}|{year}", [])
 
 
 @pytest.fixture

@@ -54,6 +54,7 @@ class Film(BaseModel):
     tmdb_id: int | None = None
     tmdb_title: str | None = None
     tmdb_year: int | None = None
+    media_type: Literal["movie", "tv"] | None = None
     match_confidence: Literal["high", "low", "none"] | None = None
     match_reason: str | None = None
     candidates: list[dict[str, Any]] = []

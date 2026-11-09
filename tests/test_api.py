@@ -55,6 +55,7 @@ def test_resolve_returns_matches(api_with_fake_tmdb):
     assert resp.status_code == 200
     heat, missing, crash = resp.json()["films"]
     assert (heat["tmdb_id"], heat["match_confidence"], heat["match_reason"]) == (949, "high", None)
+    assert heat["media_type"] == "movie" and missing["media_type"] is None
     assert heat["rating"] == 4.0 and isinstance(heat["candidates"], list)
     assert (missing["tmdb_id"], missing["match_confidence"], missing["tmdb_year"]) == (None, "none", None)
     assert (crash["tmdb_id"], crash["tmdb_year"], crash["match_reason"]) == (1640, 2005, "Year differs by 1")

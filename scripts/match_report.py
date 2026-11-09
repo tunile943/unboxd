@@ -39,9 +39,11 @@ def main(path: str, cold: bool) -> None:
     counts = out["match_confidence"].value_counts()
     print(f"\n{len(out)} films: " + ", ".join(f"{k} {counts.get(k, 0)}" for k in ("high", "low", "none")))
     print(f"high: {counts.get('high', 0) / len(out):.1%}; slowest batch {max(times):.1f}s")
+    print(f"media types: {out['media_type'].value_counts().to_dict()}")
     print("\nreasons:\n" + out["match_reason"].value_counts().to_string())
 
-    cols = ["name", "year", "watched", "tmdb_id", "tmdb_title", "tmdb_year", "match_confidence", "match_reason"]
+    cols = ["name", "year", "watched", "tmdb_id", "tmdb_title", "tmdb_year", "media_type",
+            "match_confidence", "match_reason"]
     review = out[out["match_confidence"] != "high"][cols]
     review.assign(alternatives=out["candidates"].map(
         lambda cs: "; ".join(f"{c['title']} ({c['year']}) #{c['id']}" for c in cs[:3]))).to_csv(

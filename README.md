@@ -59,7 +59,7 @@ Python dependencies for the function come from `requirements.txt` (keep it in sy
 | API: `/api/resolve` (batched TMDB matching) | `api/index.py`, `lib/export.ts` | done |
 | API: `/api/recommend` | `api/index.py` | stub (501) |
 | TMDB client + swappable cache (Redis / SQLite) | `unboxd/tmdb.py`, `unboxd/cache.py` | done |
-| Title/year → TMDB id, confidence, reason, alternatives | `unboxd/resolve.py` | done |
+| Title/year → TMDB id (movie, or TV series as fallback), confidence, reason, alternatives | `unboxd/resolve.py` | done |
 | Facet vectors (people / form / place / theme) | `unboxd/features.py` | TODO |
 | Taste profile per facet | `unboxd/profile.py` | TODO |
 | Boxd In (exploit) | `unboxd/boxd_in.py` | TODO |

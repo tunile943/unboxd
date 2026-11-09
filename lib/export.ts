@@ -22,9 +22,16 @@ export type Film = {
   tmdb_id?: number | null;
   tmdb_title?: string | null;
   tmdb_year?: number | null;
+  media_type?: "movie" | "tv" | null;
   match_confidence?: "high" | "low" | "none" | null;
   match_reason?: string | null;
-  candidates?: { id: number; title: string | null; year: number | null; poster_path: string | null }[];
+  candidates?: {
+    id: number;
+    title: string | null;
+    year: number | null;
+    poster_path: string | null;
+    media_type: "movie" | "tv";
+  }[];
 };
 
 export const RESOLVE_BATCH = 100;

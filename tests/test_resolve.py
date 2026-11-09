@@ -156,3 +156,27 @@ def test_same_title_far_year_is_a_different_film():
 def test_year_off_by_one_with_clear_margin_is_high():
     client = FakeTMDB({"Perfect Blue|1997": [cand(1, "Perfect Blue", 1998, votes=5000)]})
     assert match_film("Perfect Blue", 1997, client)["match_confidence"] == "high"
+
+
+@pytest.mark.parametrize("name, year, tmdb_id", [
+    ("The Penguin", 2024, 194764),
+    ("Secret Invasion", 2023, 114472),
+    ("Watchmen", 2019, 79788),
+])
+def test_tv_series_fallback(fake_tmdb, name, year, tmdb_id):
+    r = match_film(name, year, fake_tmdb)
+    assert (r["tmdb_id"], r["media_type"], r["match_confidence"]) == (tmdb_id, "tv", "high")
+    assert r["tmdb_title"] == name and r["tmdb_year"] == year
+
+
+def test_tv_is_only_searched_when_no_movie_matches(fake_tmdb):
+    r = match_film("Heat", 1995, fake_tmdb)
+    assert r["media_type"] == "movie"
+    assert not any(call[0] == "tv" for call in fake_tmdb.calls)
+
+
+def test_no_movie_and_no_tv_keeps_movie_result():
+    client = FakeTMDB({"Watchmen|None": [cand(1, "Watchmen", 2009, votes=10000)]})
+    r = match_film("Watchmen", 2019, client)
+    assert (r["match_confidence"], r["match_reason"], r["media_type"]) == ("none", "No match near 2019", None)
+    assert ("tv", "Watchmen", 2019) in client.calls
