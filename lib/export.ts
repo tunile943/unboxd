@@ -102,7 +102,7 @@ export async function resolveFilms(
   return out;
 }
 
-export async function recommend(films: Film[], mode: "in" | "out"): Promise<Pick[]> {
+export async function recommend(films: Film[], mode: "in" | "out", exclude: number[] = []): Promise<Pick[]> {
   const slim = films.map(({ candidates, ...f }) => f); // alternatives aren't needed and bloat the request
-  return (await post<{ picks: Pick[] }>("/api/recommend", { mode, films: slim })).picks;
+  return (await post<{ picks: Pick[] }>("/api/recommend", { mode, films: slim, exclude })).picks;
 }

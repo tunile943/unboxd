@@ -1,8 +1,9 @@
-"""Boxd In on a real export: timing, top picks, and leave-one-out recall.
+"""Boxd In (and Boxd Out) on a real export: timing, top picks, and leave-one-out recall.
 
-Usage: python scripts/recommend_report.py <export.zip> [--cold] [--loo]
+Usage: python scripts/recommend_report.py <export.zip> [--cold] [--out] [--loo]
   --cold  empty cache, to time a first-time visitor
-  --loo   leave-one-out: hide each favorite in turn and check whether it comes back
+  --out   also Boxd Out, with list metrics
+  --loo   leave-one-out: hide each favorite (or, for Boxd Out, each novel liked film) and check it comes back
 """
 
 import argparse
@@ -13,10 +14,12 @@ from pathlib import Path
 
 import pandas as pd
 
+from unboxd import boxd_out
 from unboxd.boxd_in import recommend, select_seeds
 from unboxd.cache import SQLiteCache
-from unboxd.config import RecommendConfig
-from unboxd.evaluate import leave_one_out
+from unboxd.config import ExploreConfig, RecommendConfig
+from unboxd.evaluate import explore_leave_one_out, leave_one_out
+from unboxd.features import facet_tokens, fetch_details
 from unboxd.ingest import load_export
 from unboxd.resolve import resolve_films
 from unboxd.tmdb import TMDBClient
@@ -31,10 +34,36 @@ def report_loo(films: pd.DataFrame, client, cfg: RecommendConfig) -> None:
               f"  {list(r.loc[r.in_top_k, 'name'])}")
 
 
+def report_out(films: pd.DataFrame, client, cfg: RecommendConfig, boxd_in_top50: set[int], loo: bool) -> None:
+    start = time.perf_counter()
+    shown = frozenset(recommend(films, client, cfg)["tmdb_id"])  # the page excludes Boxd In's top 20
+    picks = boxd_out.recommend(films, client, ExploreConfig(), cfg, exclude=shown)
+    print(f"\nBoxd Out ({time.perf_counter() - start:.1f}s)")
+    print(picks[["title", "year", "score", "quality", "novelty", "bridge", "reason", "on_watchlist"]]
+          .round(2).to_string())
+    details = fetch_details([("movie", int(i)) for i in picks["tmdb_id"]], client)
+    tokens = [facet_tokens(d, "movie") for d in details.values()]
+
+    def distinct(facet, prefix):
+        return len({t for x in tokens for t in x[facet] if t.startswith(prefix)})
+
+    print(f"mean TMDB rating {sum(d.get('vote_average', 0) for d in details.values()) / len(details):.2f}, "
+          f"mean novelty {picks['novelty'].mean():.2f}, {distinct('place', 'lang:')} languages, "
+          f"{distinct('form', 'decade:')} decades, {distinct('form', 'genre:')} genres, "
+          f"{sum('lang:en' in x['place'] for x in tokens)} in English, "
+          f"{picks['reason'].str.contains('you love').sum()} with a bridge, "
+          f"{len(boxd_in_top50 & set(picks['tmdb_id']))} also in Boxd In's top 50")
+    if loo:
+        r = explore_leave_one_out(films, client, ExploreConfig(), cfg)
+        print(f"explore leave-one-out: in pool {r.in_pool.sum()}/{len(r)}, in top 50 {r.in_top_k.sum()}/{len(r)}"
+              f"  {list(r.loc[r.in_top_k, 'name'])}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("export")
     ap.add_argument("--cold", action="store_true")
+    ap.add_argument("--out", action="store_true")
     ap.add_argument("--loo", action="store_true")
     args = ap.parse_args()
 
@@ -54,6 +83,8 @@ def main() -> None:
     pd.set_option("display.width", 200, "display.max_colwidth", 70)
     cols = ["title", "year", "score", "strength", "similarity", "reason", "on_watchlist"]
     print(picks[cols].round(2).to_string())
+    if args.out:
+        report_out(films, client, cfg, set(recommend(films, client, cfg, k=50)["tmdb_id"]), args.loo)
     if args.loo:
         report_loo(films, client, cfg)
 

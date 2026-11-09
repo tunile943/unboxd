@@ -23,12 +23,32 @@ class WeightConfig:
 
 @dataclass(frozen=True)
 class ExploreConfig:
-    band_low: float = 0.40  # similarity percentile band for Boxd Out
-    band_high: float = 0.75
+    min_votes: int = 300  # "highly rated" needs enough votes to trust the rating
     bayes_m: int = 500  # Bayesian-average prior strength (votes)
-    min_votes: int = 300  # /discover vote_count.gte
-    popularity_cap_pct: float = 0.99  # drop candidates above this popularity percentile
-    disliked_facet_min_films: int = 3  # suppress facet if mean w' < 0 over >= this many films
+    unexplored_share: float = 0.05  # a genre/language/decade in under 5% of your films is unexplored
+    genres: tuple[str, ...] = ("Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama",
+                               "Family", "Fantasy", "History", "Horror", "Music", "Mystery", "Romance",
+                               "Science Fiction", "Thriller", "War", "Western")
+    languages: tuple[str, ...] = ("fr", "ja", "ko", "es", "it", "de", "zh", "hi", "pt", "sv", "da", "fa", "ru")
+    decades: tuple[int, ...] = (1950, 1960, 1970, 1980, 1990, 2000)
+    bridge_keywords: int = 10  # profile's top keywords, OR-ed into each unexplored /discover query
+    max_candidates: int = 300  # discover picks kept (by Bayesian rating) before fetching details
+    novelty_min: float = 0.6  # drop candidates too close to what you already watch (0.5 let The Dark Knight in)
+    quality_weight: float = 1.0
+    novelty_weight: float = 0.5
+    bridge_weight: float = 0.25  # rescaled so the best novel candidate has 1; 0.5 lets familiar films back in
+    bridge_reason_top: int = 30  # reasons only name a person/theme among the profile's top 30
+    # novelty: unlike your history in form (genre, decade) and, less, place (country, language)
+    novelty_facets: dict[str, float] = field(
+        default_factory=lambda: {"people": 0.0, "form": 0.75, "place": 0.25, "theme": 0.0})
+    # bridge: like your taste in people and themes
+    bridge_facets: dict[str, float] = field(
+        default_factory=lambda: {"people": 0.4, "form": 0.0, "place": 0.0, "theme": 0.6})
+    # equal weights so the list spreads across languages, decades and genres
+    mmr_facets: dict[str, float] = field(
+        default_factory=lambda: {"people": 0.25, "form": 0.25, "place": 0.25, "theme": 0.25})
+    exclude_genres: tuple[str, ...] = ("TV Movie",)  # specials of TV series, often with inflated ratings
+    mmr_pool: int = 100
 
 
 @dataclass(frozen=True)

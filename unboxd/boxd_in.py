@@ -52,9 +52,8 @@ def _top_tokens(profile: TasteProfile, facets: FacetMatrix, facet: str, prefix: 
             if vec[i] > 0 and vocab[i].startswith(prefix)][:n]
 
 
-def discover_queries(profile: TasteProfile, facets: FacetMatrix, details: dict[Key, dict],
-                     cfg: RecommendConfig) -> list[tuple[str, dict]]:
-    """(reason, /discover filters) for the profile's top directors and keywords."""
+def name_ids(details: dict[Key, dict]) -> tuple[dict[str, int], dict[str, int]]:
+    """Director (or TV creator) and keyword names -> TMDB ids, for /discover filters."""
     people, keywords = {}, {}
     for (media_type, _), d in details.items():
         if media_type == "tv":
@@ -64,6 +63,13 @@ def discover_queries(profile: TasteProfile, facets: FacetMatrix, details: dict[K
             people.update({p["name"]: p["id"] for p in d.get("credits", {}).get("crew", []) if p["job"] == "Director"})
             kws = d.get("keywords", {}).get("keywords", [])
         keywords.update({k["name"]: k["id"] for k in kws})
+    return people, keywords
+
+
+def discover_queries(profile: TasteProfile, facets: FacetMatrix, details: dict[Key, dict],
+                     cfg: RecommendConfig) -> list[tuple[str, dict]]:
+    """(reason, /discover filters) for the profile's top directors and keywords."""
+    people, keywords = name_ids(details)
     queries = [(f"From {name}, a director you love", {"with_crew": people[name]})
                for name in _top_tokens(profile, facets, "people", "director:", cfg.discover_people) if name in people]
     queries += [(f"More “{kw}” films, a theme you love", {"with_keywords": keywords[kw]})
@@ -147,14 +153,19 @@ def _reason(because: list[str], via: list[str]) -> str:
     return "Because you liked " + " and ".join(because[:2]) if because else via[0]
 
 
-def candidate_pool(films: pd.DataFrame, client, cfg: RecommendConfig):
-    """Candidates plus what scoring needs: (candidates, profile weights, details so far)."""
+def profile_inputs(films: pd.DataFrame, client, cfg: RecommendConfig):
+    """(watched movie ids, profile weights, their details)."""
     matched = films[films["tmdb_id"].notna()]
     watched = set(matched.loc[matched["watched"] & (matched["media_type"] == "movie"), "tmdb_id"].astype(int))
     profile_films = matched[matched["weight"].abs() >= cfg.profile_min_abs_weight]
     weights = {(mt, int(i)): w for mt, i, w in
                zip(profile_films["media_type"], profile_films["tmdb_id"], profile_films["weight"])}
-    details = fetch_details(list(weights), client, cfg.workers)
+    return watched, weights, fetch_details(list(weights), client, cfg.workers)
+
+
+def candidate_pool(films: pd.DataFrame, client, cfg: RecommendConfig):
+    """Candidates plus what scoring needs: (candidates, profile weights, details so far)."""
+    watched, weights, details = profile_inputs(films, client, cfg)
     facets = build_facets(details)
     queries = discover_queries(build_profile(weights, facets), facets, details, cfg)
     anti = select_seeds(films, cfg, anti=True) if cfg.anti_weight else films.iloc[:0]

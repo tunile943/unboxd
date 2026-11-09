@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { type Film, type Pick, parseFilms, RESOLVE_BATCH, readExport, recommend, resolveFilms } from "@/lib/export";
 
 type Tab = "in" | "out" | "data";
@@ -12,6 +12,9 @@ export default function Home() {
   const [tab, setTab] = useState<Tab>("in");
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [picksIn, setPicksIn] = useState<Pick[] | null>(null);
+  const [picksOut, setPicksOut] = useState<Pick[] | null>(null);
+  const [outError, setOutError] = useState<string>("");
+  const upload = useRef(0); // a newer upload discards a pending Boxd Out
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -19,6 +22,9 @@ export default function Home() {
     setError("");
     setFilms(null);
     setPicksIn(null);
+    setPicksOut(null);
+    setOutError("");
+    const run = ++upload.current;
     try {
       setStatus("Unzipping your export…");
       const files = await readExport(file);
@@ -30,7 +36,12 @@ export default function Home() {
       setFilms(resolved);
       setProgress(null);
       setStatus("Packing your Boxd In…");
-      setPicksIn(await recommend(resolved, "in"));
+      const inPicks = await recommend(resolved, "in");
+      setPicksIn(inPicks);
+      recommend(resolved, "out", inPicks.map((p) => p.tmdb_id)).then(
+        (picks) => run === upload.current && setPicksOut(picks),
+        (err) => run === upload.current && setOutError(err instanceof Error ? err.message : String(err)),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -95,7 +106,12 @@ export default function Home() {
           </div>
 
           {tab === "in" && <PickList description="More of what you love." picks={picksIn} />}
-          {tab === "out" && <p className="muted">Edge-of-taste picks: coming soon.</p>}
+          {tab === "out" &&
+            (outError ? (
+              <p className="error">{outError}</p>
+            ) : (
+              <PickList description="Highly-rated movies beyond your rated genres/styles." picks={picksOut} />
+            ))}
           {tab === "data" && (
             <>
               <NeedsReview unsure={unsure} notFound={notFound} />

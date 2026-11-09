@@ -82,11 +82,21 @@ def test_recommend_in(monkeypatch):
     assert 0 < len(picks) <= 3 and {"tmdb_id", "title", "reason", "on_watchlist", "poster_path"} <= set(picks[0])
 
 
-def test_recommend_out_not_implemented():
-    assert client.post("/api/recommend", json={"mode": "out", "films": []}).status_code == 501
+def test_recommend_out(monkeypatch):
+    import api.index as api_index
+    from test_boxd_out import CFG, RCFG, world
+    df, fake = world()
+    monkeypatch.setattr(api_index, "CONFIG", replace(api_index.CONFIG, tmdb_token="test", explore=CFG, recommend=RCFG))
+    monkeypatch.setattr(api_index, "tmdb_client", lambda: fake)
+    films = df.assign(last_watched=None).astype(object).where(df.notna(), None).to_dict(orient="records")
+    resp = client.post("/api/recommend", json={"mode": "out", "films": films, "k": 3})
+    assert resp.status_code == 200
+    picks = resp.json()["picks"]
+    assert picks[0]["tmdb_id"] == 100 and {"reason", "novelty", "bridge", "on_watchlist"} <= set(picks[0])
 
 
-def test_recommend_without_token(monkeypatch):
+@pytest.mark.parametrize("mode", ["in", "out"])
+def test_recommend_without_token(monkeypatch, mode):
     import api.index as api_index
     monkeypatch.setattr(api_index, "CONFIG", replace(api_index.CONFIG, tmdb_token=""))
-    assert client.post("/api/recommend", json={"mode": "in", "films": []}).status_code == 503
+    assert client.post("/api/recommend", json={"mode": mode, "films": []}).status_code == 503

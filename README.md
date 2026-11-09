@@ -3,7 +3,7 @@
 A personal, non-commercial Letterboxd recommender. Upload your Letterboxd export ZIP and get two lists:
 
 - **Boxd In**: comfort picks, more of what you already love.
-- **Boxd Out**: well-rated films at the edge of your taste.
+- **Boxd Out**: highly rated films beyond the genres and styles you've rated.
 
 Data comes from your own export (Settings → Import & Export → Export Your Data) plus TMDB metadata.
 
@@ -36,7 +36,7 @@ npm run dev            # Next.js on :3000, FastAPI on :8000 (proxied at /api)
 pytest                 # add -m live to also hit the real TMDB API
 ```
 
-Check matching on a real export: `python scripts/match_report.py <export.zip>`. Check Boxd In: `python scripts/recommend_report.py <export.zip> --loo`. Refresh test fixtures: `python scripts/record_tmdb_fixtures.py`.
+Check matching on a real export: `python scripts/match_report.py <export.zip>`. Check Boxd In and Boxd Out: `python scripts/recommend_report.py <export.zip> --out --loo`. Refresh test fixtures: `python scripts/record_tmdb_fixtures.py`.
 
 API docs while running locally: http://localhost:8000/api/docs
 
@@ -57,17 +57,17 @@ Python dependencies for the function come from `requirements.txt` (keep it in sy
 | Per-film weight w' in [-1, 1] | `unboxd/weights.py` | done |
 | API: `/api/films` | `api/index.py` | done |
 | API: `/api/resolve` (batched TMDB matching) | `api/index.py`, `lib/export.ts` | done |
-| API: `/api/recommend` (Boxd In) | `api/index.py`, `lib/export.ts` | done (Boxd Out: 501) |
+| API: `/api/recommend` (Boxd In / Boxd Out) | `api/index.py`, `lib/export.ts` | done |
 | TMDB client + swappable cache (Redis / SQLite) | `unboxd/tmdb.py`, `unboxd/cache.py` | done |
 | Title/year → TMDB id (movie, or TV series as fallback), confidence, reason, alternatives | `unboxd/resolve.py` | done |
 | Facet vectors (people / form / place / theme) | `unboxd/features.py` | done |
 | Taste profile per facet | `unboxd/profile.py` | done |
 | Boxd In (exploit) | `unboxd/boxd_in.py` | done |
-| Boxd Out (explore) | `unboxd/boxd_out.py` | TODO |
+| Boxd Out (explore) | `unboxd/boxd_out.py` | done |
 | MMR diversification | `unboxd/diversify.py` | done |
 | Leave-one-out evaluation | `unboxd/evaluate.py` | done |
 
-Tunables (γ, λ, explore band, Bayesian m, ...) live in `unboxd/config.py`.
+Tunables (γ, λ, facet weights, Bayesian m, ...) live in `unboxd/config.py`.
 
 ### Boxd In
 
@@ -80,6 +80,17 @@ penalized) and minus a discount for films nominated only by seeds with thin TMDB
 then diversified with MMR. A bonus for agreement between seeds was tested and left off: it favors
 blockbusters. Anti-seeds (penalizing films your least-liked films recommend) are implemented
 but off by default: in leave-one-out they didn't help, since dislikes already lower profile similarity.
+
+### Boxd Out
+
+Two scores answer two questions. **Novelty** is how unlike everything you've watched (liked or not) a film's
+form (genre, decade; weighs 3×) and place (country, language) are. **Bridge** is how well its people and themes match
+your taste profile. Candidates are your seeds' TMDB recommendations plus top-rated `/discover` picks
+(≥ 300 votes) in each genre, language and decade that's in under 5% of your films, once plain and once
+narrowed to your top keywords. TV movies and the Boxd In picks already shown are dropped. Films with novelty ≥ 0.6 are ranked by Bayesian rating
++ 0.5 × novelty + 0.25 × bridge (rescaled so the best is 1; more lets familiar films back in), minus
+disliked franchises, then diversified with MMR over all facets, so the list spreads across languages and
+decades. Reasons name what's new for you and, when it's one of your top people or themes, the bridge.
 
 ### Weighting
 

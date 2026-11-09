@@ -15,7 +15,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
-from unboxd import boxd_in
+from unboxd import boxd_in, boxd_out
 from unboxd.config import CONFIG
 from unboxd.ingest import EXPORT_FILES, load_csvs
 from unboxd.resolve import resolve_films
@@ -69,6 +69,7 @@ class RecommendRequest(BaseModel):
     mode: Literal["in", "out"]
     films: list[Film]
     k: int = Field(default=CONFIG.top_k, ge=1, le=50)
+    exclude: list[int] = Field(default=[], max_length=100, description="TMDB ids to skip, e.g. Boxd In picks")
 
 
 def _clean(v: Any) -> Any:
@@ -125,13 +126,15 @@ def resolve(req: ResolveRequest) -> dict:
 @app.post("/api/recommend")
 def recommend(req: RecommendRequest) -> dict:
     """Boxd In (mode='in') or Boxd Out (mode='out')."""
-    if req.mode == "out":
-        raise HTTPException(501, "Boxd Out not implemented yet")
     if not CONFIG.tmdb_token:
         raise HTTPException(503, "TMDB token not configured")
+    films = _frame(req.films)
     try:
-        picks = boxd_in.recommend(_frame(req.films), tmdb_client(), CONFIG.recommend, k=req.k,
-                                  mmr_lambda=CONFIG.mmr_lambda)
+        if req.mode == "in":
+            picks = boxd_in.recommend(films, tmdb_client(), CONFIG.recommend, k=req.k, mmr_lambda=CONFIG.mmr_lambda)
+        else:
+            picks = boxd_out.recommend(films, tmdb_client(), CONFIG.explore, CONFIG.recommend, k=req.k,
+                                       mmr_lambda=CONFIG.mmr_lambda, exclude=frozenset(req.exclude))
     except TMDBAuthError as e:
         raise HTTPException(502, str(e)) from e
     return {"picks": records(picks)}

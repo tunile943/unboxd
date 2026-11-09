@@ -1,4 +1,4 @@
-"""Record real TMDB responses as test fixtures (needs TMDB_READ_TOKEN): matching + one Boxd In run.
+"""Record real TMDB responses as test fixtures (needs TMDB_READ_TOKEN): matching + one Boxd In and Boxd Out run.
 
 Usage: python scripts/record_tmdb_fixtures.py
 """
@@ -37,6 +37,8 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "tmdb_sear
 BOXD_IN_OUT = OUT.with_name("tmdb_boxd_in.json")
 BOXD_IN_FILMS = [("Heat", 949, 5.0), ("Parasite", 496243, 4.5), ("Transformers", 1858, 1.0)]
 RESULT_KEEP = ("id", "title", "release_date", "vote_count", "vote_average", "poster_path", "media_type")
+# narrow, so the fixture stays small
+BOXD_OUT_CFG = dict(genres=("War", "Western"), languages=("ko", "fr"), decades=(1960,), max_candidates=20)
 
 
 def _trim_details(d: dict) -> dict:
@@ -88,8 +90,9 @@ class Recorder:
 def record_boxd_in(client: TMDBClient) -> None:
     import pandas as pd
 
+    from unboxd import boxd_out
     from unboxd.boxd_in import recommend
-    from unboxd.config import RecommendConfig
+    from unboxd.config import ExploreConfig, RecommendConfig
     from unboxd.weights import compute_weights
 
     films = pd.DataFrame([{"name": n, "year": None, "rating": r, "liked": False, "rewatch_count": 0,
@@ -98,6 +101,7 @@ def record_boxd_in(client: TMDBClient) -> None:
     films["weight"] = compute_weights(films)
     recorder = Recorder(client)
     recommend(films, recorder, RecommendConfig(min_seeds=2))
+    boxd_out.recommend(films, recorder, ExploreConfig(**BOXD_OUT_CFG), RecommendConfig(min_seeds=2))
     BOXD_IN_OUT.write_text(json.dumps(recorder.saved, ensure_ascii=False, separators=(",", ":")) + "\n")
     print(f"wrote {len(recorder.saved)} responses to {BOXD_IN_OUT}")
 
