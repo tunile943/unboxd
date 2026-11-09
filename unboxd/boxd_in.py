@@ -12,17 +12,17 @@ from __future__ import annotations
 import math
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date
+from datetime import date, timedelta
 
 import numpy as np
 import pandas as pd
 
 from .config import RecommendConfig
 from .diversify import mmr
-from .features import FacetMatrix, Key, build_facets, fetch_details, item_similarity
+from .features import FacetMatrix, Key, build_facets, facet_tokens, fetch_details, item_similarity
 from .profile import TasteProfile, build_profile, similarity
 
-CANDIDATE_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "vote_count", "vote_average", "strength",
+CANDIDATE_COLUMNS = ["tmdb_id", "title", "year", "released", "poster_path", "vote_count", "vote_average", "strength",
                      "because", "because_ids", "via"]
 PICK_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "score", "strength", "similarity",
                 "reason", "on_watchlist"]
@@ -94,7 +94,7 @@ def gather_candidates(seeds: pd.DataFrame, anti: pd.DataFrame, queries: list[tup
             if (r.get("media_type", "movie") == "movie" and r["id"] not in exclude and released
                     and released <= today and (r.get("vote_count") or 0) >= cfg.min_votes):
                 yield cands.setdefault(r["id"], {
-                    "tmdb_id": r["id"], "title": r.get("title"), "year": int(released[:4]),
+                    "tmdb_id": r["id"], "title": r.get("title"), "year": int(released[:4]), "released": released,
                     "poster_path": r.get("poster_path"), "vote_count": r.get("vote_count"),
                     "vote_average": r.get("vote_average") or 0.0,
                     "strength": 0.0, "penalty": 0.0, "because": [], "because_ids": [], "via": []})
@@ -116,6 +116,13 @@ def gather_candidates(seeds: pd.DataFrame, anti: pd.DataFrame, queries: list[tup
     df = pd.DataFrame(kept, columns=CANDIDATE_COLUMNS).sort_values("strength", ascending=False)
     recommended = df[df["because"].map(bool)].head(cfg.max_candidates)
     return pd.concat([recommended, df[~df["because"].map(bool)]]).reset_index(drop=True)
+
+
+def drop_genres(cands: pd.DataFrame, details: dict[Key, dict], genres: tuple[str, ...]) -> pd.DataFrame:
+    """Candidates without any of the given TMDB genres (e.g. "TV Movie")."""
+    excluded = {f"genre:{g}" for g in genres}
+    keep = [not excluded & set(facet_tokens(details[("movie", int(i))], "movie")["form"]) for i in cands["tmdb_id"]]
+    return cands[keep].reset_index(drop=True)
 
 
 def franchise_opinions(weights: dict[Key, float], details: dict[Key, dict]) -> dict[int, float]:
@@ -143,7 +150,13 @@ def seed_credibility(seed_ids: list[int], details: dict[Key, dict], cfg: Recomme
     return min(1.0, votes / cfg.reliable_seed_votes)
 
 
-def bayesian_rating(avg: pd.Series, votes: pd.Series, m: int) -> pd.Series:
+def prior_strength(released: pd.Series, cfg: RecommendConfig, m: int, today: str | None = None) -> pd.Series:
+    """Bayesian prior strength per film: stronger for new releases, whose early ratings run high (and get brigaded)."""
+    cutoff = (date.fromisoformat(today) if today else date.today()) - timedelta(days=cfg.new_release_days)
+    return pd.Series(np.where(released > cutoff.isoformat(), m * cfg.new_release_m_mult, m), index=released.index)
+
+
+def bayesian_rating(avg: pd.Series, votes: pd.Series, m) -> pd.Series:
     """Rating pulled toward the pool's mean when there are few votes: (v·R + m·C) / (v + m)."""
     prior = (avg * votes).sum() / max(votes.sum(), 1)
     return (votes * avg + m * prior) / (votes + m)
@@ -182,6 +195,10 @@ def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
 
     cand_keys = [("movie", int(i)) for i in cands["tmdb_id"]]
     details |= fetch_details([key for key in cand_keys if key not in details], client, cfg.workers)
+    cands = drop_genres(cands, details, cfg.exclude_genres)
+    if cands.empty:
+        return pd.DataFrame(columns=PICK_COLUMNS)
+    cand_keys = [("movie", int(i)) for i in cands["tmdb_id"]]
     facets = build_facets(details)
     sim = similarity(build_profile(weights, facets), facets, cand_keys, cfg.facet_weights)
 
@@ -189,12 +206,14 @@ def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
     cands["similarity"] = sim["total"].to_numpy()
     opinions = franchise_opinions(weights, details)
     cands["franchise_penalty"] = [franchise_penalty(details[key], opinions, cfg) for key in cand_keys]
-    cands["quality"] = bayesian_rating(cands["vote_average"], cands["vote_count"], cfg.quality_m) / 10
+    m = prior_strength(cands["released"], cfg, cfg.quality_m)
+    cands["quality"] = bayesian_rating(cands["vote_average"], cands["vote_count"], m) / 10
+    lone = (cands["because"].map(len) == 1) & ~cands["via"].map(bool)
     cands["credibility"] = [seed_credibility(ids, details, cfg) for ids in cands["because_ids"]]
     cands["score"] = (cfg.rec_weight * (cands["strength"] / top if top > 0 else 0)
                       + (1 - cfg.rec_weight) * cands["similarity"]
                       + cfg.quality_weight * cands["quality"] - cands["franchise_penalty"]
-                      - cfg.reliability_weight * (1 - cands["credibility"])
+                      - cfg.reliability_weight * (1 - cands["credibility"]) - cfg.lone_seed_penalty * lone
                       + cfg.consensus_weight * np.log(cands["because"].map(len).clip(lower=1)))
     pool = cands.nlargest(cfg.mmr_pool, "score")
     pool_keys = [("movie", int(i)) for i in pool["tmdb_id"]]

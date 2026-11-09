@@ -18,8 +18,8 @@ from dataclasses import replace
 import numpy as np
 import pandas as pd
 
-from .boxd_in import (_top_tokens, bayesian_rating, franchise_opinions, franchise_penalty, gather_candidates,
-                      name_ids, profile_inputs, select_seeds)
+from .boxd_in import (_top_tokens, bayesian_rating, drop_genres, franchise_opinions, franchise_penalty,
+                      gather_candidates, name_ids, prior_strength, profile_inputs, select_seeds)
 from .config import ExploreConfig, RecommendConfig
 from .diversify import mmr
 from .features import FacetMatrix, Key, build_facets, facet_tokens, fetch_details, item_similarity
@@ -137,14 +137,14 @@ def scored_pool(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, r
     if cands.empty:
         return cands, facets
 
-    cands["quality"] = bayesian_rating(cands["vote_average"], cands["vote_count"], cfg.bayes_m) / 10
+    m = prior_strength(cands["released"], rcfg, cfg.bayes_m)
+    cands["quality"] = bayesian_rating(cands["vote_average"], cands["vote_count"], m) / 10
     recommended = cands["because"].map(bool)
     cands = pd.concat([cands[recommended], cands[~recommended].nlargest(cfg.max_candidates, "quality")])
     keys = [("movie", int(i)) for i in cands["tmdb_id"]]
     details |= fetch_details([k for k in keys if k not in details], client, rcfg.workers)
-    excluded = {f"genre:{g}" for g in cfg.exclude_genres}
-    keep = [not excluded & set(facet_tokens(details[k], "movie")["form"]) for k in keys]
-    cands, keys = cands[keep], [k for k, ok in zip(keys, keep) if ok]
+    cands = drop_genres(cands, details, rcfg.exclude_genres)
+    keys = [("movie", int(i)) for i in cands["tmdb_id"]]
     facets = build_facets(details)
     taste = build_profile(weights, facets)
     opinions = franchise_opinions(weights, details)

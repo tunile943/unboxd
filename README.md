@@ -73,8 +73,10 @@ Tunables (γ, λ, facet weights, Bayesian m, ...) live in `unboxd/config.py`.
 
 TMDB recommendations of your top-rated films (top 15% by w′, ties included, 10–100 seeds) plus `/discover`
 results for your profile's favorite directors and keywords nominate candidates. Watched, unreleased and
-low-vote (< 50) films are dropped. Candidates are ranked by similarity to your taste profile (people and
-theme weigh most) plus a Bayesian TMDB rating (vote average pulled toward the mean when votes are few), minus a
+low-vote (< 300) films are dropped. Candidates are ranked by similarity to your taste profile (people and
+theme weigh most) plus a Bayesian TMDB rating (vote average pulled toward the mean when votes are few, twice as
+hard for films out less than a year, whose early ratings run high), minus a small discount for films only one
+seed recommends, minus a
 penalty for TMDB collections you dislike on balance (average w′ ≤ −0.10, so mixed franchises aren't
 penalized) and minus a discount for films nominated only by seeds with thin TMDB data (< 500 votes),
 then diversified with MMR. A bonus for agreement between seeds was tested and left off: it favors

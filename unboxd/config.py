@@ -47,7 +47,6 @@ class ExploreConfig:
     # equal weights so the list spreads across languages, decades and genres
     mmr_facets: dict[str, float] = field(
         default_factory=lambda: {"people": 0.25, "form": 0.25, "place": 0.25, "theme": 0.25})
-    exclude_genres: tuple[str, ...] = ("TV Movie",)  # specials of TV series, often with inflated ratings
     mmr_pool: int = 100
 
 
@@ -76,7 +75,8 @@ class RecommendConfig:
     anti_weight: float = 0.0  # off: didn't help in leave-one-out; a dislike already lowers profile similarity
     discover_people: int = 5  # profile's top directors -> /discover
     discover_keywords: int = 5  # profile's top keywords -> /discover
-    min_votes: int = 50  # quality floor for candidates
+    min_votes: int = 300  # quality floor for candidates (drops thin spin-offs; no leave-one-out loss vs. 50)
+    exclude_genres: tuple[str, ...] = ("TV Movie",)  # TV specials and spin-offs, often with inflated ratings
     max_candidates: int = 300  # cap on TMDB-recommended candidates; discover picks are always kept
     rec_weight: float = 0.0  # TMDB recs nominate, the profile ranks (best in leave-one-out)
     # place is ~1.0 for most US/English films, so it doesn't tell candidates apart
@@ -84,6 +84,9 @@ class RecommendConfig:
         default_factory=lambda: {"people": 0.35, "form": 0.2, "place": 0.0, "theme": 0.45})
     quality_weight: float = 0.6  # Bayesian TMDB rating (/10); 1.0 drifts toward famous classics
     quality_m: int = 500  # Bayesian prior strength, in votes
+    new_release_days: int = 365  # released within this many days counts as new
+    new_release_m_mult: float = 2.0  # prior strength × this for new releases: early ratings run high (and get brigaded)
+    lone_seed_penalty: float = 0.03  # nominated by a single seed and no discover query; 0.05+ cost leave-one-out
     reliability_weight: float = 0.2  # discount for films nominated only by seeds with few TMDB votes
     reliable_seed_votes: int = 500  # a seed with this many votes has a trusted recommendation list (1000 lost Bugonia)
     consensus_weight: float = 0.0  # bonus × log(#recommending seeds); off: favors blockbusters, hurt leave-one-out

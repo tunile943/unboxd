@@ -2,6 +2,7 @@ import json
 from dataclasses import replace
 
 import pandas as pd
+import pytest
 
 from conftest import BOXD_IN_FIXTURES, FakeTMDB, movie, rec
 from unboxd.boxd_in import (franchise_opinions, franchise_penalty, gather_candidates, recommend,
@@ -158,6 +159,35 @@ def test_bayesian_rating():
     avg, votes = pd.Series([8.5, 9.0, 6.0]), pd.Series([40000, 20, 40000])
     r = bayesian_rating(avg, votes, m=500)
     assert abs(r[0] - 8.5) < 0.05 and r[1] < 7.5 and abs(r[2] - 6.0) < 0.05  # few votes -> pulled to the mean
+
+
+def test_new_releases_get_a_stronger_prior():
+    from unboxd.boxd_in import bayesian_rating, prior_strength
+    released = pd.Series(["2025-12-01", "2020-01-01"])
+    m = prior_strength(released, replace(CFG, new_release_m_mult=2), 500, today="2026-01-01")
+    assert list(m) == [1000, 500]
+    r = bayesian_rating(pd.Series([9.0, 9.0, 7.0]), pd.Series([600, 600, 100000]), pd.concat([m, pd.Series([500])],
+                                                                                          ignore_index=True))
+    assert r[0] < r[1]  # same votes and average, but the new one is trusted less
+
+
+def test_lone_seed_nominations_are_discounted():
+    df, client = recommend_setup()
+    client.responses["rec|1"] = [{**rec(10), "vote_average": 7.0}, {**rec(11), "vote_average": 7.0}]
+    client.responses["rec|2"] = [{**rec(11), "vote_average": 7.0}]
+    client.responses["md|10"] = client.responses["md|11"] = movie()
+    scores = {}
+    for penalty in (0.0, 0.5):
+        picks = recommend(df, client, replace(ALL_SEEDS, lone_seed_penalty=penalty), k=10, mmr_lambda=1.0)
+        scores[penalty] = picks.set_index("tmdb_id")["score"]
+    assert scores[0.5][10] == pytest.approx(scores[0.0][10] - 0.5) and scores[0.5][11] == pytest.approx(scores[0.0][11])
+
+
+def test_tv_movies_are_dropped():
+    df, client = recommend_setup()
+    client.responses["md|10"] = movie("Wes Anderson", ["Comedy", "TV Movie"], ["quirky"])
+    assert 10 not in set(recommend(df, client, ALL_SEEDS, k=10)["tmdb_id"])
+    assert 10 in set(recommend(df, client, replace(ALL_SEEDS, exclude_genres=()), k=10)["tmdb_id"])
 
 
 def test_quality_breaks_ties():
