@@ -1,1 +1,84 @@
-/* landing: see the owning component(s) in app/components/ */
+/* Landing: hero copy beside a front-on kraft box. The drop zone, progress and errors live on its shipping label. */
+.landing { container-type: inline-size; overflow-x: clip; }
+.landing-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 14px; }
+
+.landing .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: center; padding-block: 16px 26px; }
+@container (max-width: 600px) { .landing .hero { grid-template-columns: minmax(0, 1fr); } }
+.landing .kicker { font: 700 13px var(--body); color: var(--to); margin-bottom: 8px; letter-spacing: .01em; }
+.landing .title { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 5.6cqi, 46px); line-height: 1; letter-spacing: -.035em; }
+.landing .modes { display: grid; gap: 10px; margin: 18px 0 0; }
+.landing .mode { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; align-items: baseline; padding-top: 10px; border-top: 1px solid var(--line); }
+.landing .mode dt { font: 800 16px var(--display); letter-spacing: -.02em; }
+.landing .mode dd { margin: 0; color: var(--mute); }
+.landing .mode.in dt { color: var(--tg); }
+.landing .mode.out dt { color: var(--tb); }
+
+/* While loading, the copy steps aside and the box takes the stage. */
+.landing.is-loading .hero { grid-template-columns: minmax(0, 1fr); justify-items: center; padding-top: 24px; }
+.landing.is-loading .hero-copy { display: none; }
+.landing.is-loading .kbox { width: min(560px, 100%); }
+
+/* The box: a lid band with a hand-hold cutout over a light-green interior. */
+.kbox { position: relative; padding: 62px 26px 26px; background: var(--k-face); border: 2px solid var(--k-edge); border-radius: 6px;
+  transform-origin: 50% 100%; transition: border-color .15s ease; }
+.kbox::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 44px; border-radius: 4px 4px 0 0; background: linear-gradient(var(--k-wall), var(--k-floor)); }
+.kbox[data-drag] { border-color: var(--lg); }
+.kbox .lid { position: absolute; left: -2px; right: -2px; top: -2px; height: 46px; z-index: 2; background: var(--k-lid); border: 2px solid var(--k-edge); border-radius: 6px 6px 2px 2px;
+  transform-origin: 50% 100%; transition: transform .32s cubic-bezier(.3, 1.4, .5, 1), opacity .32s ease; }
+.kbox .hold { position: absolute; left: 50%; top: 13px; width: 58px; height: 16px; margin-left: -29px; border-radius: 999px; background: var(--k-floor); box-shadow: inset 0 3px 0 var(--k-wall); }
+
+.kbox.growing { animation: u-grow .45s cubic-bezier(.2, .9, .3, 1.15); }
+.kbox.jiggle { animation: var(--jig-anim, u-jig-a) var(--jig-dur, .5s) ease-in-out; transform-origin: var(--jig-origin, 50% 100%); }
+.kbox[data-reveal] .lid { transform: translateY(-30px) rotate(-5deg); opacity: 0; }
+.kbox[data-reveal="leave"] { transform: translateY(115%); opacity: 0; transition: transform .45s cubic-bezier(.5, 0, .8, .4), opacity .45s ease-in; }
+
+@keyframes u-grow { from { transform: scale(.86); } to { transform: scale(1); } }
+@keyframes u-jig-a { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(calc(-1 * var(--jig, 2deg))); } 55% { transform: rotate(calc(.75 * var(--jig, 2deg))); } 80% { transform: rotate(calc(-.3 * var(--jig, 2deg))); } }
+@keyframes u-jig-b { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(var(--jig, 2deg)); } 55% { transform: rotate(calc(-.75 * var(--jig, 2deg))); } 80% { transform: rotate(calc(.3 * var(--jig, 2deg))); } }
+@keyframes u-jig-c { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(calc(-.55 * var(--jig, 2deg))); } 35% { transform: rotate(calc(.55 * var(--jig, 2deg))); } 55% { transform: rotate(calc(-.4 * var(--jig, 2deg))); } 75% { transform: rotate(calc(.25 * var(--jig, 2deg))); } }
+@keyframes u-jig-d { 0%, 100% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-4px) rotate(calc(-.6 * var(--jig, 2deg))); } 60% { transform: translateY(0) rotate(calc(.45 * var(--jig, 2deg))); } 82% { transform: translateY(0) rotate(calc(-.15 * var(--jig, 2deg))); } }
+
+/* The shipping label stays light in both themes, like a real sticker, so it pins its own palette. */
+.kbox .ship { --ink: #1d1b22; --mute: #5f5b68; --line: #d8d3c8; --surface: #ffffff; --bg: #fbfaf6; --tg: #00753a; --to: #b34f00; --red: #b4233a; --on-brand: #1d1b22;
+  position: relative; z-index: 1; display: grid; gap: 12px; padding: 14px; background: var(--bg); color: var(--ink); color-scheme: light;
+  border: 1px solid #cfc8ba; border-radius: 6px; box-shadow: 0 1px 0 rgb(40 30 15 / .12); }
+.kbox .ship-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #e4dfd4; }
+.kbox .ship-top i { flex: 1; max-width: 140px; height: 13px;
+  background: linear-gradient(#d9d3c6, #d9d3c6) 0 0 / 100% 1px no-repeat, linear-gradient(#d9d3c6, #d9d3c6) 0 6px / 80% 1px no-repeat, linear-gradient(#d9d3c6, #d9d3c6) 0 12px / 60% 1px no-repeat; }
+.kbox .ship-top b { width: 84px; height: 18px; opacity: .4;
+  background: repeating-linear-gradient(90deg, #1d1b22 0 1px, transparent 1px 3px, #1d1b22 3px 5px, transparent 5px 6px, #1d1b22 6px 7px, transparent 7px 10px); }
+
+.kbox .drop { border: 2px dashed color-mix(in srgb, var(--lg) 70%, var(--line)); border-radius: 8px; padding: 18px 14px; text-align: center; display: grid; gap: 10px; justify-items: center; transition: background-color .15s ease; }
+.kbox[data-drag] .drop { background: color-mix(in srgb, var(--lg) 12%, transparent); }
+.kbox .drop strong { font: 800 17px var(--display); letter-spacing: -.01em; }
+.kbox .drop small { font-size: 11.5px; color: var(--mute); }
+.kbox .btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.kbox label.btn { display: inline-flex; align-items: center; }
+.kbox label.btn:has(input:focus-visible) { outline: 2px solid var(--lo); outline-offset: 2px; }
+
+.kbox .prog { display: grid; gap: 12px; }
+.kbox .prog h2, .kbox .err h2 { font: 800 19px var(--display); letter-spacing: -.02em; }
+.kbox .bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.kbox .bar i { display: block; height: 100%; background: var(--lg); border-radius: 999px; transition: width .3s ease; }
+.kbox .row { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--mute); flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.kbox .row b { color: var(--ink); }
+.kbox .fine { font-size: 12px; color: var(--mute); }
+
+.kbox .err { display: grid; gap: 10px; }
+.kbox .err h2 { color: var(--red); }
+.kbox .err p { font-size: 13px; overflow-wrap: anywhere; }
+
+.kbox .priv { display: grid; gap: 4px; }
+.kbox .priv > div { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; }
+.kbox .priv p { font-size: 12px; color: var(--mute); }
+.kbox .info { position: relative; width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1.5px solid currentColor; display: inline-grid; place-items: center;
+  font: 700 11px var(--body); background: none; color: var(--mute); cursor: help; }
+
+/* Phones: 44px touch targets. */
+@media (max-width: 600px), (pointer: coarse) {
+  .landing .btn { min-height: 44px; justify-content: center; }
+  .kbox .info::after { content: ""; position: absolute; inset: -13px; }
+}
+@container (max-width: 600px) {
+  .kbox { padding: 58px 14px 14px; }
+}
