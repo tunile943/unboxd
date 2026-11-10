@@ -131,10 +131,10 @@ def recommend(req: RecommendRequest) -> dict:
     films = _frame(req.films)
     try:
         if req.mode == "in":
-            picks = boxd_in.recommend(films, tmdb_client(), CONFIG.recommend, k=req.k, mmr_lambda=CONFIG.mmr_lambda)
+            picks = boxd_in.recommend(films, tmdb_client(), CONFIG.recommend, k=req.k)
         else:
             picks = boxd_out.recommend(films, tmdb_client(), CONFIG.explore, CONFIG.recommend, k=req.k,
-                                       mmr_lambda=CONFIG.mmr_lambda, exclude=frozenset(req.exclude))
+                                       exclude=frozenset(req.exclude))
     except TMDBAuthError as e:
         raise HTTPException(502, str(e)) from e
     return {"picks": records(picks)}

@@ -218,13 +218,11 @@ def test_unreliable_seed_is_discounted():
 
 def test_director_picks_are_checked_against_credits():
     from unboxd.boxd_in import verify_crew
-    cands = pd.DataFrame({"tmdb_id": [1, 2, 3, 4], "because": [[], [], [], ["Seed"]],
-                          "via": [["From Ann, a director you love"]] * 3 + [["From Ann, a director you love"]],
-                          "via_crew": [[7], [7], [7], [7]]})
+    cands = pd.DataFrame({"tmdb_id": [1, 2, 3], "because": [[], [], []],
+                          "via": [["From Ann, a director you love"]] * 3, "via_crew": [[7], [7], [7]]})
     crew = {1: [{"id": 7, "job": "Director"}], 2: [{"id": 7, "job": "Screenplay"}],
-            3: [{"id": 7, "job": "Storyboard Artist"}], 4: [{"id": 7, "job": "Storyboard Artist"}]}
+            3: [{"id": 7, "job": "Storyboard Artist"}]}
     out = verify_crew(cands, {("movie", i): {"credits": {"crew": c}} for i, c in crew.items()}).set_index("tmdb_id")
     assert out.loc[1, "via"] == ["From Ann, a director you love"]
     assert out.loc[2, "via"] == ["Written by Ann, a director you love"]
-    assert 3 not in out.index  # only nominated through a storyboard credit
-    assert out.loc[4, "via"] == [] and out.loc[4, "because"] == ["Seed"]  # kept for its seed
+    assert out.loc[3, "via"] == ["With Ann, a director you love, as storyboard artist"]

@@ -4,6 +4,7 @@ Usage: python scripts/movielens_eval.py data/movielens/ml-latest-small [--split 
   --split    users are split once into two fixed, disjoint halves: pick settings on "tune",
              then confirm them on "test" (untouched until then)
   --compare  also run the alternative configs below, to re-check tuning decisions
+  --lambdas  sweep MMR lambda instead, e.g. --lambdas 0.5 0.7 0.9
 
 Get the data from https://grouplens.org/datasets/movielens/latest/ into data/ (git-ignored; not redistributable).
 MovieLens has no likes, rewatches or watchlist, and ends in 2018, so new-release handling isn't tested here.
@@ -98,6 +99,7 @@ def main() -> None:
     ap.add_argument("--users", type=int, default=40)
     ap.add_argument("--max-held", type=int, default=10, help="held-out films per user in leave-one-out")
     ap.add_argument("--compare", action="store_true")
+    ap.add_argument("--lambdas", type=float, nargs="+")
     args = ap.parse_args()
 
     users = load_users(args.path, args.split, n=args.users)
@@ -107,7 +109,11 @@ def main() -> None:
     pd.set_option("display.width", 200)
     for title, configs, run in (("Boxd In", IN_CONFIGS, eval_in), ("Boxd Out", OUT_CONFIGS, eval_out)):
         rows = []
-        for name, cfg in (configs.items() if args.compare else [("now", configs["now"])]):
+        if args.lambdas:
+            configs = {f"lambda {lam}": replace(configs["now"], mmr_lambda=lam) for lam in args.lambdas}
+        elif not args.compare:
+            configs = {"now": configs["now"]}
+        for name, cfg in configs.items():
             start = time.perf_counter()
             rows.append({"config": name, **run(users, client, cfg, args.max_held),
                          "secs": round(time.perf_counter() - start)})

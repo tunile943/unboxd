@@ -48,6 +48,7 @@ class ExploreConfig:
     mmr_facets: dict[str, float] = field(
         default_factory=lambda: {"people": 0.25, "form": 0.25, "place": 0.25, "theme": 0.25})
     mmr_pool: int = 100
+    mmr_lambda: float = 0.5  # relevance (rescaled to 0-1 in the pool) vs. diversity; lower spread languages more
 
 
 @dataclass(frozen=True)
@@ -94,6 +95,7 @@ class RecommendConfig:
     franchise_weight: float = 1.0  # penalty per unit of net dislike for a TMDB collection
     franchise_dead_zone: float = 0.10  # net w' above -0.10 ("it was fine") isn't a dislike
     mmr_pool: int = 100
+    mmr_lambda: float = 0.6  # relevance (rescaled to 0-1 in the pool) vs. diversity; best in leave-one-out
     workers: int = 8
 
 
@@ -106,7 +108,6 @@ class Config:
     match: MatchConfig = field(default_factory=MatchConfig)
     recommend: RecommendConfig = field(default_factory=RecommendConfig)
     top_k: int = 20
-    mmr_lambda: float = 0.7  # relevance vs. diversity trade-off
 
 
 CONFIG = Config()

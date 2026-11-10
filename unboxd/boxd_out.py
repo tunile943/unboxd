@@ -162,14 +162,15 @@ def scored_pool(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, r
 
 
 def recommend(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, rcfg: RecommendConfig | None = None,
-              k: int = 20, mmr_lambda: float = 0.7, exclude: frozenset[int] = frozenset()) -> pd.DataFrame:
+              k: int = 20, mmr_lambda: float | None = None, exclude: frozenset[int] = frozenset()) -> pd.DataFrame:
     cfg = cfg or ExploreConfig()
     cands, facets = scored_pool(films, client, cfg, rcfg, exclude)
     pool = cands[cands["novelty"] >= cfg.novelty_min].nlargest(cfg.mmr_pool, "score") if len(cands) else cands
     if pool.empty:
         return pd.DataFrame(columns=PICK_COLUMNS)
     keys = [("movie", int(i)) for i in pool["tmdb_id"]]
-    picks = pool.iloc[mmr(pool["score"].to_numpy(), item_similarity(facets, keys, cfg.mmr_facets), k, mmr_lambda)]
+    picks = pool.iloc[mmr(pool["score"].to_numpy(), item_similarity(facets, keys, cfg.mmr_facets), k,
+                          mmr_lambda if mmr_lambda is not None else cfg.mmr_lambda)]
     movies = films[films["tmdb_id"].notna() & (films["media_type"] == "movie")]
     watchlist = set(movies.loc[movies["on_watchlist"], "tmdb_id"].astype(int))
     return picks.assign(on_watchlist=picks["tmdb_id"].isin(watchlist))[PICK_COLUMNS].reset_index(drop=True)

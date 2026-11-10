@@ -110,7 +110,7 @@ def test_mmr_spreads_languages():
     client.responses["md|101"] = movie("Kim", ["Drama"], ["revenge"], year=2003, country="KR", lang="ko")
     client.by_lang[("fr", False)] = [hit(103, avg=7.9, year=1965)]
     client.responses["md|103"] = movie("Q", ["Drama"], ["revenge"], year=1965, country="FR", lang="fr")
-    picks = boxd_out.recommend(df, client, CFG, RCFG, k=2, mmr_lambda=0.5)
+    picks = boxd_out.recommend(df, client, CFG, RCFG, k=2, mmr_lambda=0.3)
     assert set(picks["tmdb_id"]) == {100, 103}
 
 

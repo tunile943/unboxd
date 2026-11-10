@@ -127,22 +127,23 @@ def drop_genres(cands: pd.DataFrame, details: dict[Key, dict], genres: tuple[str
 
 
 def verify_crew(cands: pd.DataFrame, details: dict[Key, dict]) -> pd.DataFrame:
-    """/discover's with_crew matches any crew job. Keep a director-query nomination only if that person
-    directed the film (or wrote it, with the reason adjusted); drop candidates left with no nomination."""
+    """/discover's with_crew matches any crew job, so a director query can find films the person only wrote,
+    produced or storyboarded. Keep those picks but say what the person actually did."""
     vias = []
     for tmdb_id, via, crew in zip(cands["tmdb_id"], cands["via"], cands["via_crew"]):
-        jobs = defaultdict(set)
+        jobs = defaultdict(list)
         for p in details.get(("movie", int(tmdb_id)), {}).get("credits", {}).get("crew", []):
-            jobs[p["id"]].add(p["job"])
+            jobs[p["id"]].append(p["job"])
         kept = []
         for reason, person in zip(via, crew):
-            if person is None or "Director" in jobs[person]:
+            if person is None or "Director" in jobs[person] or not jobs[person]:
                 kept.append(reason)
-            elif jobs[person] & {"Writer", "Screenplay", "Story"}:
+            elif {"Writer", "Screenplay", "Story"} & set(jobs[person]):
                 kept.append(reason.replace("From ", "Written by ", 1))
+            else:
+                kept.append(reason.replace("From ", "With ", 1) + f", as {jobs[person][0].lower()}")
         vias.append(kept)
-    cands = cands.assign(via=vias)
-    return cands[cands["because"].map(bool) | cands["via"].map(bool)].reset_index(drop=True)
+    return cands.assign(via=vias)
 
 
 def franchise_opinions(weights: dict[Key, float], details: dict[Key, dict]) -> dict[int, float]:
@@ -207,7 +208,7 @@ def candidate_pool(films: pd.DataFrame, client, cfg: RecommendConfig):
 
 
 def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
-              k: int = 20, mmr_lambda: float = 0.7) -> pd.DataFrame:
+              k: int = 20, mmr_lambda: float | None = None) -> pd.DataFrame:
     cfg = cfg or RecommendConfig()
     cands, weights, details = candidate_pool(films, client, cfg)
     if cands.empty:
@@ -237,7 +238,8 @@ def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
                       + cfg.consensus_weight * np.log(cands["because"].map(len).clip(lower=1)))
     pool = cands.nlargest(cfg.mmr_pool, "score")
     pool_keys = [("movie", int(i)) for i in pool["tmdb_id"]]
-    order = mmr(pool["score"].to_numpy(), item_similarity(facets, pool_keys, cfg.facet_weights), k, mmr_lambda)
+    order = mmr(pool["score"].to_numpy(), item_similarity(facets, pool_keys, cfg.facet_weights), k,
+                mmr_lambda if mmr_lambda is not None else cfg.mmr_lambda)
     picks = pool.iloc[order]
 
     movies = films[films["tmdb_id"].notna() & (films["media_type"] == "movie")]
