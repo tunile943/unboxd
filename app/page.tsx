@@ -6,7 +6,7 @@ import { Footer } from "./components/Footer";
 import { LandingBox } from "./components/LandingBox";
 import { PickColumns } from "./components/PickColumns";
 import { ResultsHeader } from "./components/ResultsHeader";
-import { type Tab, Tabs } from "./components/Tabs";
+import { PANEL_ID, type Tab, Tabs } from "./components/Tabs";
 import { useUnboxd } from "./useUnboxd";
 
 export default function Home() {
@@ -20,11 +20,13 @@ export default function Home() {
         <div data-testid="results">
           <ResultsHeader films={u.films!} isSample={u.isSample} onReset={() => { setTab("in"); u.reset(); }} />
           <Tabs tab={tab} onChange={setTab} />
-          {tab === "data" ? (
-            <DataTable films={u.films!} />
-          ) : (
-            <PickColumns picksIn={u.picksIn!} picksOut={u.picksOut} outError={u.outError} tab={tab} />
-          )}
+          <div id={PANEL_ID} role="tabpanel" aria-label={tab === "data" ? "Your data" : "Recommendations"}>
+            {tab === "data" ? (
+              <DataTable films={u.films!} />
+            ) : (
+              <PickColumns picksIn={u.picksIn!} picksOut={u.picksOut} outError={u.outError} tab={tab} />
+            )}
+          </div>
         </div>
       ) : (
         <LandingBox u={u} />
