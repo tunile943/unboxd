@@ -1,4 +1,4 @@
-"""The sample diary in public/sample/ matches what app/SampleLabel.tsx says about it."""
+"""The sample diary in public/sample/ matches what app/components/SampleLabel.tsx says about it."""
 from pathlib import Path
 
 from unboxd.ingest import EXPORT_FILES, load_csvs

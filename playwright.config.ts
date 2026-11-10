@@ -14,7 +14,7 @@ export default defineConfig({
     { name: "phone", use: { browserName: "chromium", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
   ],
   webServer: {
-    command: `npx next dev -p ${PORT}`,
+    command: process.env.CI ? `npx next start -p ${PORT}` : `npx next dev -p ${PORT}`, // CI tests the build
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

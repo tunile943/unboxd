@@ -3,16 +3,17 @@
 import type { Pick } from "@/lib/export";
 import type { Tab } from "./Tabs";
 
-// Desktop shows both columns; phones show the one matching the selected tab.
+// Desktop shows both columns, each scrolling on its own (focusable so keyboards can scroll them);
+// phones show the one matching the selected tab.
 export function PickColumns({ picksIn, picksOut, outError, tab }:
   { picksIn: Pick[]; picksOut: Pick[] | null; outError: string; tab: Tab }) {
   return (
     <div className="u-split" data-tab={tab}>
-      <section className="u-col in" aria-label="Boxd In">
+      <section className="u-col in" aria-label="Boxd In" tabIndex={0}>
         <header><h2>Boxd In</h2><p>More of what you love.</p></header>
         <PickList picks={picksIn} />
       </section>
-      <section className="u-col out" aria-label="Boxd Out">
+      <section className="u-col out" aria-label="Boxd Out" tabIndex={0}>
         <header><h2>Boxd Out</h2><p>Highly-rated movies beyond your rated genres/styles.</p></header>
         {outError ? (
           <p className="error" role="alert">Couldn&apos;t pack Boxd Out: {outError}</p>

@@ -113,3 +113,24 @@ test("tabs work from the keyboard", async ({ page }, info) => {
   await expect(tab(0)).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("tabpanel")).toBeVisible();
 });
+
+test("on desktop each column scrolls on its own", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "phones show one column at a time");
+  await openSample(page);
+  const boxdIn = page.getByRole("region", { name: "Boxd In" });
+  const boxdOut = page.getByRole("region", { name: "Boxd Out" });
+  await boxdOut.locator(".u-card").first().waitFor();
+  await boxdIn.hover();
+  await page.mouse.wheel(0, 600);
+  await expect.poll(() => boxdIn.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  expect(await boxdOut.evaluate((el) => el.scrollTop)).toBe(0);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0); // the page itself stays put
+  await expect(boxdIn.getByRole("heading", { name: "Boxd In" })).toBeInViewport(); // sticky column header
+});
+
+test("focus moves to the results, and back to the landing on start over", async ({ page }) => {
+  await openSample(page);
+  await expect(page.getByRole("heading", { level: 1, name: "Recommendations for the sample diary" })).toBeFocused();
+  await page.getByRole("button", { name: "Use your own export" }).click();
+  await expect(page.locator("#landing-title")).toBeFocused();
+});

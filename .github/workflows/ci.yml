@@ -4,6 +4,7 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
@@ -34,7 +35,7 @@ jobs:
       - run: npm ci
       - run: npx next build
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test  # API is mocked: no Python or TMDB token needed
+      - run: npx playwright test  # against next start (the build above); API is mocked, so no Python or token
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

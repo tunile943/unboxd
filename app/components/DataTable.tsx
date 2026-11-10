@@ -52,11 +52,11 @@ export function DataTable({ films }: { films: Film[] }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((f) => {
+            {rows.map((f, i) => {
               const [st, mark, label] = MATCH[f.match_confidence ?? "none"];
               const w = f.weight;
               return (
-                <tr key={`${f.name}-${f.year}`} data-st={st}>
+                <tr key={`${f.name}-${f.year}-${f.tmdb_id ?? i}`} data-st={st}>
                   <td className="stc">
                     <span className={`st ${st}`} role="img" aria-label={label} title={f.match_reason ? `${label}: ${f.match_reason}` : label}>
                       {mark}

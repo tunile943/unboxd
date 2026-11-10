@@ -6,16 +6,14 @@ body {
 }
 h1, h2, h3, h4, h5 { margin: 0; line-height: 1.15; text-wrap: balance; }
 p { margin: 0; }
-a, .link { color: var(--to); }
-:focus-visible { outline: 2px solid var(--lo); outline-offset: 2px; }
+a { color: var(--to); }
+:focus-visible { outline: 2px solid var(--to); outline-offset: 2px; }
 button { font: inherit; color: inherit; }
 img { max-width: 100%; }
 
 .page { max-width: 1120px; margin: 0 auto; padding-block: 0 24px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-button.link { padding: 0; border: 0; background: none; text-decoration: underline; cursor: pointer; }
-button.link:disabled { color: var(--mute); cursor: default; }
 .muted { color: var(--mute); }
 .error { color: var(--red); }
 

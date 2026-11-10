@@ -98,6 +98,17 @@ export function LandingBox({ u }: { u: Unboxd }) {
     if (file && !busy) upload(file);
   };
 
+  // A file dropped beside the box (or while busy) must not make the browser open it and leave the page.
+  useEffect(() => {
+    const block = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", block);
+    window.addEventListener("drop", block);
+    return () => {
+      window.removeEventListener("dragover", block);
+      window.removeEventListener("drop", block);
+    };
+  }, []);
+
   const p = u.progress;
   const title =
     u.phase === "reading"
@@ -116,7 +127,7 @@ export function LandingBox({ u }: { u: Unboxd }) {
       <div className="hero">
         <div className="hero-copy">
           <p className="kicker">A Letterboxd recommender</p>
-          <h1 className="title">Two boxes of films, carefully packed from your ratings.</h1>
+          <h1 className="title" id="landing-title" tabIndex={-1}>Two boxes of films, carefully packed from your ratings.</h1>
           <dl className="modes">
             <div className="mode in"><dt>Boxd In</dt><dd>More of what you love.</dd></div>
             <div className="mode out"><dt>Boxd Out</dt><dd>Highly-rated movies beyond your rated genres/styles.</dd></div>
@@ -130,9 +141,8 @@ export function LandingBox({ u }: { u: Unboxd }) {
           data-reveal={reveal || undefined}
           data-drag={dragging || undefined}
           onDragOver={(e) => {
-            if (busy) return;
             e.preventDefault();
-            setDragging(true);
+            if (!busy) setDragging(true);
           }}
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false);
@@ -142,9 +152,10 @@ export function LandingBox({ u }: { u: Unboxd }) {
           <div className="lid" aria-hidden="true"><span className="hold" /></div>
           <div className="ship">
             <div className="ship-top" aria-hidden="true"><i /><b /></div>
+            <p className="sr-only" role="status" aria-live="polite">{busy ? title : ""}</p>
             {busy ? (
               <div className="prog">
-                <h2 role="status" aria-live="polite">{title}</h2>
+                <h2>{title}</h2>
                 <div className="bar" role="progressbar" aria-label="Progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
                   <i style={{ width: `${pct}%` }} />
                 </div>
@@ -157,7 +168,7 @@ export function LandingBox({ u }: { u: Unboxd }) {
                 <p className="fine">
                   {u.isSample
                     ? "The sample diary is a small demo, so this only takes a moment."
-                    : "Your export was read in this browser. Only the film list is sent for matching."}
+                    : "Your export was read in this browser. Your films and ratings are sent for matching."}
                 </p>
               </div>
             ) : (
@@ -196,7 +207,7 @@ export function LandingBox({ u }: { u: Unboxd }) {
             <div className="priv">
               <div>
                 <span>All data lives in-browser.<sup>*</sup></span>
-                <button className="info" type="button" title={PRIVACY} aria-label="About your data" aria-describedby="priv-note">i</button>
+                <span className="info" title={PRIVACY} aria-hidden="true">i</span>
               </div>
               <p id="priv-note"><sup>*</sup> {PRIVACY}</p>
             </div>

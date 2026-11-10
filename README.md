@@ -38,7 +38,7 @@ pytest                 # add -m live to also hit the real TMDB API
 
 Check matching on a real export: `python scripts/match_report.py <export.zip>`. Check Boxd In and Boxd Out: `python scripts/recommend_report.py <export.zip> --out --loo`. Refresh test fixtures: `python scripts/record_tmdb_fixtures.py`.
 
-The "Try with sample data" button loads a hand-written demo diary from `public/sample/` (described in `app/SampleLabel.tsx`; `tests/test_sample.py` keeps the two in sync).
+The "Try with sample data" button loads a hand-written demo diary from `public/sample/` (described in `app/components/SampleLabel.tsx`; `tests/test_sample.py` keeps the two in sync).
 
 Frontend tests: `npm run test:e2e` (Playwright; the API is mocked from `e2e/fixtures/sample-api.json`, re-recorded with `python scripts/record_e2e_fixtures.py`). CI (`.github/workflows/ci.yml`) runs pytest, pyflakes, `next build` and Playwright on every push.
 

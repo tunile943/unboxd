@@ -3,7 +3,7 @@
 .landing-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 14px; }
 
 .landing .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: center; padding-block: 16px 26px; }
-@container (max-width: 600px) { .landing .hero { grid-template-columns: minmax(0, 1fr); } }
+@container (max-width: 640px) { .landing .hero { grid-template-columns: minmax(0, 1fr); } }
 .landing .kicker { font: 700 13px var(--body); color: var(--to); margin-bottom: 8px; letter-spacing: .01em; }
 .landing .title { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 5.6cqi, 46px); line-height: 1; letter-spacing: -.035em; }
 .landing .modes { display: grid; gap: 10px; margin: 18px 0 0; }
@@ -75,10 +75,10 @@
   font: 700 11px var(--body); background: none; color: var(--mute); cursor: help; }
 
 /* Phones: 44px touch targets. */
-@media (max-width: 600px), (pointer: coarse) {
+@media (max-width: 640px), (pointer: coarse) {
   .landing .btn { min-height: 44px; justify-content: center; }
   .kbox .info::after { content: ""; position: absolute; inset: -13px; }
 }
-@container (max-width: 600px) {
+@container (max-width: 640px) {
   .kbox { padding: 58px 14px 14px; }
 }

@@ -37,6 +37,11 @@
   color-scheme: dark;
 }
 
+/* Under reduced motion, views crossfade instead of moving (the one animation kept). */
+@keyframes u-fade { from { opacity: 0; } to { opacity: 1; } }
+[data-motion="reduce"] .fade-in { animation: u-fade .3s ease both !important; }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .fade-in { animation: u-fade .3s ease both !important; } }
+
 /* Reduce motion: Settings sets data-motion="reduce" (On) or "full" (Off); System follows the OS. */
 [data-motion="reduce"] *, [data-motion="reduce"] *::before, [data-motion="reduce"] *::after {
   animation: none !important; transition: none !important;

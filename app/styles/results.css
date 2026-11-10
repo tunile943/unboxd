@@ -12,7 +12,8 @@
 .u-stamp { font-size: 12.5px; color: var(--mute); font-variant-numeric: tabular-nums; }
 .u-stamp b { color: var(--ink); font-weight: 600; }
 .u-sample { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; border: 1.5px dashed var(--lo); background: var(--ow); font-size: 12.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.u-info { width: 18px; height: 18px; margin-left: 2px; padding: 0; border-radius: 50%; border: 1.5px solid currentColor; display: inline-grid; place-items: center; font: 700 11px var(--body); background: none; color: var(--to); cursor: pointer; }
+.u-info::after { content: ""; position: absolute; inset: -4px; } /* 26px target */
+.u-info { position: relative; width: 18px; height: 18px; margin-left: 2px; padding: 0; border-radius: 50%; border: 1.5px solid currentColor; display: inline-grid; place-items: center; font: 700 11px var(--body); background: none; color: var(--to); cursor: pointer; }
 
 /* Tabs: desktop pill (.tabs-d) and phone row (.tabs-m) */
 .tabs-d { margin-top: 14px; }
@@ -83,6 +84,14 @@ img.poster { padding: 0; display: block; }
 .wbar.n i { left: auto; right: 50%; background: var(--lb); border-radius: 3px 0 0 3px; }
 
 /* Phones: three tabs in one sticky row, one panel at a time */
+/* Desktop: each column scrolls on its own, sized so header, tabs and both columns fit the window. */
+@media (min-width: 641px) {
+  .u-col { max-height: max(360px, calc(100dvh - 180px)); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  .u-col header { position: sticky; top: -16px; z-index: 1; margin: -16px -16px 0; padding: 16px 16px 8px; }
+  .u-col.in header { background: var(--gw); }
+  .u-col.out header { background: var(--bg); }
+}
+
 @media (max-width: 640px) {
   .u-rhead .u-manage { order: 1; width: 100%; }
   .tabs-d { display: none; }

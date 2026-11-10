@@ -40,7 +40,7 @@ test("landing shows both entry points and the privacy footnote", async ({ page }
   await expect(landing.getByRole("button", { name: "Try with sample data" })).toBeVisible();
   await expect(landing.getByText("All data lives in-browser.")).toBeVisible();
   await expect(landing.getByText(/we do not retain them/)).toBeVisible();
-  await expect(landing.getByRole("button", { name: "About your data" })).toHaveAttribute("title", /stored only in this browser/);
+  await expect(landing.locator(".priv .info")).toHaveAttribute("title", /stored only in this browser/); // hover hint; the footnote is the accessible text
 });
 
 test("the sample shows progress on the label, then results", async ({ page }) => {
@@ -114,4 +114,15 @@ test("phone: landing buttons are at least 44px tall", async ({ page }, info) => 
   for (const btn of [page.getByText("Choose ZIP"), page.getByRole("button", { name: "Try with sample data" })]) {
     expect((await btn.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   }
+});
+
+test("a file dropped beside the box doesn't open in the browser", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/");
+  const prevented = await page.evaluate(() => {
+    const drop = new DragEvent("drop", { cancelable: true, bubbles: true, dataTransfer: new DataTransfer() });
+    document.querySelector("footer")!.dispatchEvent(drop);
+    return drop.defaultPrevented;
+  });
+  expect(prevented).toBe(true);
 });
