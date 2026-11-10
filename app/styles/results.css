@@ -143,5 +143,16 @@ img.poster { padding: 0; display: block; }
 .u-lc-sec ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
 .u-lc-sec.fragile { border: 2px dashed #b4233a; border-radius: 4px; padding: 8px 10px; }
 .u-lc-sec.fragile h3 { color: #b4233a; }
+/* Phones: the label is a full-screen sheet that scrolls, with the close button in a sticky top bar. */
+@media (max-width: 640px) {
+  .u-persona-dlg { width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; inset: 0;
+    overflow-y: auto; overscroll-behavior: contain; background: #fbfaf6; }
+  .u-persona-dlg form { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; background: #fbfaf6;
+    border-bottom: 1px solid #e4dfd4; padding: env(safe-area-inset-top, 0px) max(4px, env(safe-area-inset-right, 0px)) 0 0; }
+  .u-lc-x { position: static; width: 44px; height: 44px; }
+  .u-label-card { border: 0; border-radius: 0; box-shadow: none;
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .u-lc-top { padding-right: 0; }
+}
 @media (max-width: 420px) { .u-lc-stats div { padding-inline: 8px; } .u-lc-stats dt { letter-spacing: .02em; } }
 .u-lc-foot { display: grid; gap: 2px; padding-top: 8px; border-top: 1px solid #e4dfd4; font-size: 12px; color: #5f5b68; }

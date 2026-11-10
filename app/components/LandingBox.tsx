@@ -207,7 +207,6 @@ export function LandingBox({ u }: { u: Unboxd }) {
             <div className="priv">
               <div>
                 <span>All data lives in-browser.<sup>*</sup></span>
-                <span className="info" title={PRIVACY} aria-hidden="true">i</span>
               </div>
               <p id="priv-note"><sup>*</sup> {PRIVACY}</p>
             </div>

@@ -21,8 +21,7 @@ export function SampleLabel({ ref }: { ref: React.Ref<HTMLDialogElement> }) {
           <small>SHIP TO</small>
           <h2 id="sample-label-title">The sample diary</h2>
           <p>
-            A demo profile written by hand for trying Unboxd, not a real Letterboxd member. Recommendations
-            are generated live from it.
+            A demo profile written by hand for trying Unboxd. Recommendations are generated live from it.
           </p>
         </div>
         <dl className="u-lc-stats">
@@ -64,7 +63,7 @@ export function SampleLabel({ ref }: { ref: React.Ref<HTMLDialogElement> }) {
         </section>
         <section className="u-lc-sec">
           <h3 className="meh">Shrugs at</h3>
-          <p>Twisty crowd-pleasers that don&apos;t land: Tenet, Glass Onion, The Menu.</p>
+          <p>Twisty crowd-pleasers: Tenet, Glass Onion, The Menu.</p>
         </section>
         <section className="u-lc-sec fragile">
           <h3>Fragile: can&apos;t stand</h3>

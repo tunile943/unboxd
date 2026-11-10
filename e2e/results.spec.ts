@@ -134,3 +134,20 @@ test("focus moves to the results, and back to the landing on start over", async 
   await page.getByRole("button", { name: "Use your own export" }).click();
   await expect(page.locator("#landing-title")).toBeFocused();
 });
+
+test("on phones the sample label is a full-screen sheet that scrolls", async ({ page }, info) => {
+  test.skip(info.project.name !== "phone", "desktop keeps the centered modal");
+  await page.setViewportSize({ width: 390, height: 600 }); // a short phone: the label no longer fits
+  await openSample(page);
+  await page.getByRole("button", { name: "Who is the sample diary?" }).click();
+  const sheet = page.getByRole("dialog", { name: "The sample diary" });
+  const box = (await sheet.boundingBox())!;
+  const vp = page.viewportSize()!;
+  expect(Math.round(box.width)).toBe(vp.width);
+  expect(Math.round(box.height)).toBe(vp.height);
+  await sheet.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  expect(await sheet.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  await expect(page.getByText(/Watchlist leans older/)).toBeInViewport();
+  await page.getByRole("button", { name: "Close" }).click(); // still reachable after scrolling: sticky bar
+  await expect(sheet).toBeHidden();
+});
