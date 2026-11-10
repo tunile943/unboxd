@@ -1,6 +1,8 @@
 from collections import Counter
 from dataclasses import replace
 
+import pandas as pd
+
 from conftest import FakeTMDB, films, movie, rec
 from unboxd import boxd_out
 from unboxd.candidates import profile_inputs
@@ -156,3 +158,16 @@ def test_exclude_skips_films_already_shown():
     df, client = world()
     picks = boxd_out.recommend(df, client, CFG, RCFG, exclude=frozenset({100}))
     assert 100 not in set(picks["tmdb_id"]) and len(picks)
+
+
+def test_sticker_labels():
+    df, client = world()
+    picks = boxd_out.recommend(df, client, CFG, RCFG).set_index("tmdb_id")
+    assert picks.loc[100, "new_label"] == "Korean"
+    assert picks.loc[100, "bridge_label"] in {"Kim", "revenge"}
+    assert picks.loc[103, "new_label"] == "French" and pd.isna(picks.loc[103, "bridge_label"])
+
+
+def test_label_kinds():
+    tokens = ("lang:ko", "lang:xx", "genre:War", "decade:1960s", "cast:Florence Pugh", "kw:time travel", None)
+    assert [boxd_out._label(t) for t in tokens] == ["Korean", "xx", "War", "1960s", "Florence Pugh", "time travel", None]
