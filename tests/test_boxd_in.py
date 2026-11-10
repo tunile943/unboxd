@@ -4,7 +4,11 @@ import pytest
 
 from conftest import BOXD_IN_FIXTURES, FakeTMDB, films, movie, rec
 from test_quality import in_collection
-from unboxd.boxd_in import recommend, seed_credibility
+import pandas as pd
+
+from unboxd.boxd_in import keyword_only, recommend, seed_credibility, shared_keywords
+from unboxd.features import build_facets
+from unboxd.profile import build_profile
 from unboxd.config import RecommendConfig
 from unboxd.evaluate import leave_one_out
 
@@ -112,3 +116,17 @@ def test_unreliable_seed_is_discounted():
     client.responses["rec|2"] = [rec(11)]
     picks = list(recommend(df, client, replace(ALL_SEEDS, reliability_weight=0.5), k=10, mmr_lambda=1.0)["tmdb_id"])
     assert picks.index(11) < picks.index(10)
+
+
+def test_keyword_only():
+    c = pd.DataFrame({"because": [["Heat"], [], [], []], "via_crew": [[None], [None], [[42]], [None, [42]]]})
+    assert keyword_only(c).tolist() == [False, True, False, False]
+
+
+def test_shared_keywords_counts_liked_keywords():
+    details = {("movie", 1): movie(keywords=["heist", "los angeles"]), ("movie", 2): movie(keywords=["explosion"]),
+               ("movie", 10): movie(keywords=["heist", "los angeles", "explosion"]),
+               ("movie", 11): movie(keywords=["heist", "space"])}
+    facets = build_facets(details)
+    profile = build_profile({("movie", 1): 1.0, ("movie", 2): -0.5}, facets)
+    assert shared_keywords(profile, facets, [("movie", 10), ("movie", 11)]).tolist() == [2, 1]

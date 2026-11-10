@@ -91,6 +91,12 @@ class RecommendConfig:
     profile_min_abs_weight: float = 0.05  # near-neutral films barely move the profile
     franchise_weight: float = 1.0  # penalty per unit of net dislike for a TMDB collection
     franchise_dead_zone: float = 0.10  # net w' above -0.10 ("it was fine") isn't a dislike
+    form_decade: bool = True  # decade tokens in Boxd In's form facet (Boxd Out's novelty always uses them)
+    min_shared_keywords: int = 0  # keyword-only picks must share this many keywords with the profile (0 = off)
+    # Picks found only by a keyword search (no seed, no director) need this many votes: a single shared keyword plus a
+    # few hundred fan votes let in kids' TV spin-offs. Free in leave-one-out and MovieLens. Tried and kept off:
+    # form weight 0.10/0.05 or no decade token (lost recent favorites: 7 -> 4/20), requiring 2 shared keywords (-2).
+    discover_min_votes: int = 1000
     mmr_pool: int = 100
     mmr_lambda: float = 0.6  # relevance (rescaled to 0-1 in the pool) vs. diversity; best in leave-one-out
     workers: int = 8

@@ -73,9 +73,11 @@ def _tokens(doc: list[str]) -> list[str]:
     return doc
 
 
-def build_facets(details: dict[Key, dict]) -> FacetMatrix:
+def build_facets(details: dict[Key, dict], drop: tuple[str, ...] = ()) -> FacetMatrix:
+    """`drop`: token prefixes to leave out (e.g. "decade:")."""
     keys = list(details)
-    tokens = [facet_tokens(details[k], k[0]) for k in keys]
+    tokens = [{f: [t for t in toks if not t.startswith(drop)] if drop else toks
+               for f, toks in facet_tokens(details[k], k[0]).items()} for k in keys]
     matrices, vocab = {}, {}
     for f in FACETS:
         docs = [t[f] for t in tokens]

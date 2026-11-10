@@ -1,13 +1,14 @@
 """Boxd In: more of what you love.
 
 Candidates come from TMDB recommendations of your top films plus /discover results
-for your profile's favorite directors and keywords. They're ranked by similarity to
+for your profile's favorite directors and keywords (keyword-only finds need more TMDB votes). They're ranked by similarity to
 your taste profile plus a Bayesian TMDB rating, minus penalties for franchises you
 dislike on balance, thinly-backed nominations and lone-seed picks, then diversified (MMR).
 """
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from .candidates import (drop_genres, gather_candidates, name_ids, profile_inputs, select_seeds, top_tokens,
@@ -43,6 +44,18 @@ def seed_credibility(seed_ids: list[int], details: dict[Key, dict], cfg: Recomme
     return min(1.0, votes / cfg.reliable_seed_votes)
 
 
+def keyword_only(cands: pd.DataFrame) -> pd.Series:
+    """Found only by keyword searches: no seed recommended it and no director search found it."""
+    return (cands["because"].map(len) == 0) & cands["via_crew"].map(lambda crew: not any(crew))
+
+
+def shared_keywords(profile: TasteProfile, facets: FacetMatrix, keys: list[Key]) -> np.ndarray:
+    """How many of each film's keywords the profile likes (positive weight)."""
+    liked = (profile.vectors["theme"] > 0).astype(float)
+    rows = facets.matrices["theme"][[facets.index[k] for k in keys]]
+    return np.asarray((rows > 0).astype(float) @ liked).ravel() if rows.shape[1] else np.zeros(len(keys))
+
+
 def _reason(because: list[str], via: list[str]) -> str:
     return "Because you liked " + " and ".join(because[:2]) if because else via[0]
 
@@ -65,12 +78,19 @@ def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
     cand_keys = [("movie", int(i)) for i in cands["tmdb_id"]]
     details |= fetch_details([key for key in cand_keys if key not in details], client, cfg.workers)
     cands = verify_crew(drop_genres(cands, details, cfg.exclude_genres), details)
+    facets = build_facets(details, () if cfg.form_decade else ("decade:",))
+    profile = build_profile(weights, facets)
+    if cfg.discover_min_votes:
+        cands = cands[~keyword_only(cands) | (cands["vote_count"] >= cfg.discover_min_votes)]
+    if cfg.min_shared_keywords and len(cands):
+        shared = shared_keywords(profile, facets, [("movie", int(i)) for i in cands["tmdb_id"]])
+        cands = cands[~keyword_only(cands).to_numpy() | (shared >= cfg.min_shared_keywords)]
     if cands.empty:
         return pd.DataFrame(columns=PICK_COLUMNS)
+    cands = cands.copy()
     cand_keys = [("movie", int(i)) for i in cands["tmdb_id"]]
-    facets = build_facets(details)
 
-    sim = similarity(build_profile(weights, facets), facets, cand_keys, cfg.facet_weights)
+    sim = similarity(profile, facets, cand_keys, cfg.facet_weights)
     cands["similarity"] = sim["total"].to_numpy()
     opinions = franchise_opinions(weights, details)
     cands["franchise_penalty"] = [franchise_penalty(details[key], opinions, cfg) for key in cand_keys]

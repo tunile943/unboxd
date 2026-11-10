@@ -2,7 +2,15 @@ import { expect, type Page, test } from "@playwright/test";
 import { mockApi, openSample, SAMPLE } from "./helpers";
 
 const isPhone = (name: string) => name === "phone";
-const [logan, incendies] = SAMPLE.picks_in;
+// Picked from the recorded fixture by what they show, so a re-recording with new picks still works.
+type Offers = { stream: { name: string }[]; rent: unknown[]; buy: unknown[] };
+const extras = SAMPLE.extras_us as Record<string, { trailer: unknown; providers: Offers }>;
+const has = (p: { tmdb_id: number; overview: string | null }, test: (e: (typeof extras)[string]) => boolean) =>
+  !!p.overview && test(extras[p.tmdb_id]);
+const logan = SAMPLE.picks_in.find((p) => has(p, (e) => !!e.trailer && e.providers.stream.length > 0))!; // streams
+const incendies = SAMPLE.picks_in.find((p) => p !== logan && has(p, (e) => !!e.trailer && !e.providers.stream.length
+  && e.providers.rent.length + e.providers.buy.length > 0))!; // rent or buy only
+const firstStream = extras[logan.tmdb_id].providers.stream[0].name;
 const card = (page: Page, title: string) => page.locator(".u-card").filter({ has: page.getByRole("heading", { name: title }) });
 
 test("cards show quick facts, a trailer button and where to watch", async ({ page }) => {
@@ -10,7 +18,7 @@ test("cards show quick facts, a trailer button and where to watch", async ({ pag
   const c = card(page, logan.title);
   await expect(c.locator(".u-facts")).toHaveText(`${logan.runtime} min · ${logan.genres.join(", ")} · ${logan.director}`);
   await expect(c.getByRole("button", { name: "Trailer" })).toBeVisible();
-  await expect(c.getByRole("link", { name: `Stream ${logan.title} on Disney Plus` })).toBeVisible();
+  await expect(c.getByRole("link", { name: new RegExp(`^Stream ${logan.title} on ${firstStream}`) })).toBeVisible();
   await expect(card(page, incendies.title).getByRole("link", { name: "Rent or buy" })).toBeVisible();
 });
 
@@ -103,5 +111,5 @@ test("a failed extras call is retried when the region changes back", async ({ pa
     await page.getByLabel("Watch region").selectOption(r);
     await page.getByRole("button", { name: "Close settings" }).click();
   }
-  await expect(card(page, logan.title).getByRole("link", { name: `Stream ${logan.title} on Disney Plus` })).toBeVisible();
+  await expect(card(page, logan.title).getByRole("link", { name: new RegExp(`^Stream ${logan.title} on ${firstStream}`) })).toBeVisible();
 });

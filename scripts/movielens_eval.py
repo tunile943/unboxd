@@ -26,12 +26,15 @@ from unboxd.weights import compute_weights
 
 YEAR = re.compile(r"\s*\((\d{4})\)\s*$")
 IN, OUT = RecommendConfig(), ExploreConfig()
+FORM = lambda w: {**IN.facet_weights, "form": w}  # noqa: E731
 IN_CONFIGS = {
     "now": IN,
-    "previous commit": replace(IN, min_votes=50, lone_seed_penalty=0.0, new_release_m_mult=1.0, exclude_genres=()),
-    "min_votes 50": replace(IN, min_votes=50),
-    "no lone-seed discount": replace(IN, lone_seed_penalty=0.0),
-    "TV movies kept": replace(IN, exclude_genres=()),
+    "form 0.10": replace(IN, facet_weights=FORM(0.10)),
+    "form 0.05": replace(IN, facet_weights=FORM(0.05)),
+    "no decade": replace(IN, form_decade=False),
+    "form 0.10, no decade": replace(IN, facet_weights=FORM(0.10), form_decade=False),
+    "keyword picks share 2 keywords": replace(IN, min_shared_keywords=2),
+    "keyword picks: no vote floor": replace(IN, discover_min_votes=0),
 }
 OUT_CONFIGS = {
     "now": OUT,
@@ -100,6 +103,7 @@ def main() -> None:
     ap.add_argument("--max-held", type=int, default=10, help="held-out films per user in leave-one-out")
     ap.add_argument("--compare", action="store_true")
     ap.add_argument("--lambdas", type=float, nargs="+")
+    ap.add_argument("--in-only", action="store_true", help="skip Boxd Out")
     args = ap.parse_args()
 
     users = load_users(args.path, args.split, n=args.users)
@@ -107,7 +111,8 @@ def main() -> None:
     print(f"{args.split} split: {len(users)} users, {sizes.min()}-{sizes.max()} ratings (median {sizes.median():.0f})")
     client = TMDBClient()
     pd.set_option("display.width", 200)
-    for title, configs, run in (("Boxd In", IN_CONFIGS, eval_in), ("Boxd Out", OUT_CONFIGS, eval_out)):
+    modes = (("Boxd In", IN_CONFIGS, eval_in),) + (() if args.in_only else (("Boxd Out", OUT_CONFIGS, eval_out),))
+    for title, configs, run in modes:
         rows = []
         if args.lambdas:
             configs = {f"lambda {lam}": replace(configs["now"], mmr_lambda=lam) for lam in args.lambdas}
