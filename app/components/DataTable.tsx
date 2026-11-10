@@ -9,6 +9,8 @@ const MATCH = {
   none: ["no", "–", "Not found"],
 } as const;
 
+const PAGE = 100;
+
 const needsReview = (f: Film) => f.match_confidence === "low" || f.match_confidence === "none";
 
 function stars(rating: number | null) {
@@ -18,22 +20,25 @@ function stars(rating: number | null) {
 
 export function DataTable({ films }: { films: Film[] }) {
   const [onlyReview, setOnlyReview] = useState(false);
+  const [shown, setShown] = useState(PAGE);
   const watched = films.filter((f) => f.watched);
   const reviewCount = watched.filter(needsReview).length;
   const sorted = [...watched].sort((a, b) => (b.weight ?? -2) - (a.weight ?? -2));
-  const rows = onlyReview ? sorted.filter(needsReview) : sorted.slice(0, 100);
+  const all = onlyReview ? sorted.filter(needsReview) : sorted;
+  const rows = all.slice(0, shown);
+  const left = all.length - rows.length;
 
   return (
     <div className="u-dataview">
       <div className="u-sub">
         <h2>Your films by taste weight</h2>
         <span className="u-stamp">
-          {onlyReview ? "Films that need a check." : "Top 100."} w′ runs from −1 to +1. It combines your rating, likes and rewatches.
+          {onlyReview ? "Films that need a check." : `${all.length} watched.`} w′ runs from −1 to +1. It combines your rating, likes and rewatches.
         </span>
       </div>
       <div className="u-chips">
         <button className="u-chip" type="button" aria-pressed={onlyReview} disabled={!reviewCount && !onlyReview}
-                onClick={() => setOnlyReview((v) => !v)}>
+                onClick={() => { setOnlyReview((v) => !v); setShown(PAGE); }}>
           Needs review ({reviewCount})
         </button>
         <span className="u-stamp">Match: ✓ matched · ? unsure · – not found</span>
@@ -91,6 +96,11 @@ export function DataTable({ films }: { films: Film[] }) {
             )}
           </tbody>
         </table>
+        {left > 0 && (
+          <button className="u-chip u-more" type="button" onClick={() => setShown((n) => n + PAGE)}>
+            Show {Math.min(PAGE, left)} more ({left} left)
+          </button>
+        )}
       </div>
     </div>
   );

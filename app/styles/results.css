@@ -67,6 +67,7 @@ img.poster { padding: 0; display: block; }
 .u-chip { font: 700 12.5px var(--body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
 .u-chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .u-chip:disabled { color: var(--mute); cursor: default; }
+.u-more { display: block; margin: 12px auto 0; }
 .u-data-wrap { position: relative; overflow-x: auto; padding-bottom: 16px; }
 .u-data { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .u-data th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--mute); text-align: left; font-weight: 700; padding: 0 8px 8px; border-bottom: 1.5px solid var(--ink); white-space: nowrap; }

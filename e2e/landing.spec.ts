@@ -38,8 +38,8 @@ test("landing shows both entry points and the privacy footnote", async ({ page }
   await expect(landing.getByRole("heading", { name: "Two boxes of films, carefully packed from your ratings." })).toBeVisible();
   await expect(landing.getByText("Choose ZIP")).toBeVisible();
   await expect(landing.getByRole("button", { name: "Try with sample data" })).toBeVisible();
-  await expect(landing.getByText("All data lives in-browser.")).toBeVisible();
-  await expect(landing.getByText(/we do not retain them/)).toBeVisible();
+  await expect(landing.getByText("Your export isn't saved.")).toBeVisible();
+  await expect(landing.getByText(/then discarded/)).toBeVisible();
 });
 
 test("the sample shows progress on the label, then results", async ({ page }) => {
@@ -118,10 +118,12 @@ test("phone: landing buttons are at least 44px tall", async ({ page }, info) => 
 test("a file dropped beside the box doesn't open in the browser", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  const prevented = await page.evaluate(() => {
-    const drop = new DragEvent("drop", { cancelable: true, bubbles: true, dataTransfer: new DataTransfer() });
-    document.querySelector("footer")!.dispatchEvent(drop);
-    return drop.defaultPrevented;
-  });
-  expect(prevented).toBe(true);
+  // Polled: the window listener attaches after hydration.
+  await expect.poll(() =>
+    page.evaluate(() => {
+      const drop = new DragEvent("drop", { cancelable: true, bubbles: true, dataTransfer: new DataTransfer() });
+      document.querySelector("footer")!.dispatchEvent(drop);
+      return drop.defaultPrevented;
+    }),
+  ).toBe(true);
 });

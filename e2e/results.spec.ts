@@ -151,3 +151,16 @@ test("on phones the sample label is a full-screen sheet that scrolls", async ({ 
   await page.getByRole("button", { name: "Close" }).click(); // still reachable after scrolling: sticky bar
   await expect(sheet).toBeHidden();
 });
+
+test("Your data shows 100 films at a time with Show more", async ({ page }) => {
+  const films = Array.from({ length: 250 }, (_, i) => ({ ...SAMPLE.films[0], watched: true, name: `Film ${i}` }));
+  await openSample(page, { films });
+  await page.getByRole("tab", { name: "Your data" }).click();
+  const rows = page.getByRole("table").locator("tbody tr");
+  await expect(rows).toHaveCount(100);
+  await page.getByRole("button", { name: "Show 100 more (150 left)" }).click();
+  await expect(rows).toHaveCount(200);
+  await page.getByRole("button", { name: "Show 50 more (50 left)" }).click();
+  await expect(rows).toHaveCount(250);
+  await expect(page.getByRole("button", { name: /Show \d+ more/ })).toHaveCount(0);
+});

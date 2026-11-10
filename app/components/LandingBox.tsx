@@ -7,7 +7,7 @@ import { Wordmark } from "./Logo";
 import { SettingsMenu } from "./SettingsMenu";
 
 const PRIVACY =
-  "Your export is stored only in this browser. Film lists are sent to our server to match them on TMDB, but we do not retain them.";
+  "Unboxd reads your ZIP in this browser and doesn't save it. Its five film lists (watched, diary, ratings, likes, watchlist) are sent to our server to match films on TMDB and pick recommendations, then discarded. Only TMDB lookups are cached, with nothing that ties them to you.";
 
 // One shake per finished batch: a left-right, b right-left, c double shiver, d hop with a tilt.
 const JIGS = [["a", ".5s"], ["b", ".5s"], ["c", ".45s"], ["d", ".55s"]] as const;
@@ -206,7 +206,7 @@ export function LandingBox({ u }: { u: Unboxd }) {
             )}
             <div className="priv">
               <div>
-                <span>All data lives in-browser.<sup>*</sup></span>
+                <span>Your export isn&apos;t saved.<sup>*</sup></span>
               </div>
               <p id="priv-note"><sup>*</sup> {PRIVACY}</p>
             </div>
