@@ -87,7 +87,9 @@ img.poster { padding: 0; display: block; }
 /* Phones: three tabs in one sticky row, one panel at a time */
 /* Desktop: each column scrolls on its own, sized so header, tabs and both columns fit the window. */
 @media (min-width: 641px) {
-  .u-col { max-height: max(360px, calc(100dvh - 180px)); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  /* Header, tabs, both columns and the footer fit one screen. relative: keeps the cards' absolutely positioned
+     screen-reader text inside the scroll box (otherwise it stretches the page far past the footer). */
+  .u-col { position: relative; max-height: max(360px, calc(100dvh - 240px)); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; }
   .u-col header { position: sticky; top: -16px; z-index: 1; margin: -16px -16px 0; padding: 16px 16px 8px; }
   .u-col.in header { background: var(--gw); }
   .u-col.out header { background: var(--bg); }
@@ -117,7 +119,7 @@ img.poster { padding: 0; display: block; }
 }
 
 /* Footer */
-.u-foot { margin-top: 16px; border-top: 1px solid var(--line); padding-block: 12px; font-size: 10.5px; color: var(--mute); }
+.u-foot { margin-top: auto; border-top: 1px solid var(--line); padding-block: 12px; font-size: 10.5px; color: var(--mute); }
 
 /* The sample's shipping label stays light in both themes, like a real sticker. */
 .u-persona-dlg { border: 0; padding: 0; background: transparent; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; color-scheme: light; }

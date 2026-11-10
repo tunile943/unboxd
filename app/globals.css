@@ -11,7 +11,9 @@ a { color: var(--to); }
 button { font: inherit; color: inherit; }
 img { max-width: 100%; }
 
-.page { max-width: 1120px; margin: 0 auto; padding-block: 0 24px;
+/* A full-height column, so the footer sits at the bottom of the screen when the content is shorter. */
+.page { max-width: 1120px; margin: 0 auto; padding-block: 0 24px; min-height: 100dvh; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 16px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .muted { color: var(--mute); }

@@ -166,3 +166,14 @@ test("Your data shows 100 films at a time with Show more", async ({ page }) => {
   await expect(rows).toHaveCount(250);
   await expect(page.getByRole("button", { name: /Show \d+ more/ })).toHaveCount(0);
 });
+
+test("the footer sits at the bottom with no empty space past it", async ({ page }, info) => {
+  await openSample(page);
+  await page.locator(".u-card").first().waitFor();
+  const { docH, vh, footBottom } = await page.evaluate(() => ({
+    docH: document.documentElement.scrollHeight, vh: innerHeight,
+    footBottom: document.querySelector("footer.u-foot")!.getBoundingClientRect().bottom + scrollY,
+  }));
+  expect(docH - footBottom).toBeLessThanOrEqual(30); // just the page's bottom padding
+  if (info.project.name === "desktop") expect(docH).toBe(vh); // header, both columns and footer fit one screen
+});
