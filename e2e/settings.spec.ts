@@ -122,8 +122,7 @@ test("desktop gets a popover under the gear", async ({ page }, info) => {
   expect(Math.min(Math.abs(m.x - g.x), Math.abs(m.x + m.width - (g.x + g.width)))).toBeLessThan(2);
 });
 
-// Needs PickColumns to render <span class="sticker new"> (results agent); enable once that lands.
-test.fixme("Boxd Out picks show stickers", async ({ page }, info) => {
+test("Boxd Out picks show stickers", async ({ page }, info) => {
   test.skip(info.project.name !== "desktop", "both columns show on desktop");
   await openSample(page);
   await expect(page.getByRole("region", { name: "Boxd Out" }).locator(".sticker.new").first()).toBeVisible();
