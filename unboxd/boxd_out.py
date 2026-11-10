@@ -27,7 +27,7 @@ from .profile import TasteProfile, build_profile, similarity
 from .quality import bayesian_rating, franchise_opinions, franchise_penalty, prior_strength
 
 PICK_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "score", "quality", "novelty", "bridge",
-                "reason", "on_watchlist"]
+                "reason", "new_label", "bridge_label", "on_watchlist"]
 GENRE_IDS = {"Action": 28, "Adventure": 12, "Animation": 16, "Comedy": 35, "Crime": 80, "Documentary": 99,
              "Drama": 18, "Family": 10751, "Fantasy": 14, "History": 36, "Horror": 27, "Music": 10402,
              "Mystery": 9648, "Romance": 10749, "Science Fiction": 878, "Thriller": 53, "War": 10752,
@@ -108,13 +108,24 @@ BRIDGE_TEXT = {"director": "from {}, a director you love", "dop": "shot by {}, a
                "cast": "with {}, an actor you love", "kw": "about “{}”, a theme you love"}
 
 
-def _reason(d: dict, key: Key, counts: Counter, n_watched: int, bridge_token: str | None,
-            cfg: ExploreConfig) -> str:
+def _novel_token(d: dict, key: Key, counts: Counter, n_watched: int, cfg: ExploreConfig) -> str | None:
+    """The rarest unexplored language, genre or decade of a film."""
     tokens = facet_tokens(d, key[0])
     novel = [t for t in tokens["form"] + tokens["place"]
              if t.split(":")[0] in NOVEL_KINDS and counts[t] < cfg.unexplored_share * n_watched]
-    token = min(novel, key=lambda t: (counts[t], NOVEL_KINDS.index(t.split(":")[0])), default=None)
-    parts = [_novel_text(token, counts[token]) if token else "Highly rated, off your usual path"]
+    return min(novel, key=lambda t: (counts[t], NOVEL_KINDS.index(t.split(":")[0])), default=None)
+
+
+def _label(token: str | None) -> str | None:
+    """Display name of a token: "lang:ko" -> "Korean", "genre:War" -> "War", "director:Kim" -> "Kim"."""
+    if not token:
+        return None
+    kind, value = token.split(":", 1)
+    return LANGUAGES.get(value, value) if kind == "lang" else value
+
+
+def _reason(novel_token: str | None, counts: Counter, bridge_token: str | None) -> str:
+    parts = [_novel_text(novel_token, counts[novel_token]) if novel_token else "Highly rated, off your usual path"]
     if bridge_token:
         kind, value = bridge_token.split(":", 1)
         parts.append(BRIDGE_TEXT[kind].format(value))
@@ -123,7 +134,7 @@ def _reason(d: dict, key: Key, counts: Counter, n_watched: int, bridge_token: st
 
 def scored_pool(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, rcfg: RecommendConfig | None = None,
                 exclude: frozenset[int] = frozenset()) -> tuple[pd.DataFrame, FacetMatrix]:
-    """Every candidate with quality, novelty, bridge, score and reason (before the novelty floor and MMR).
+    """Every candidate with quality, novelty, bridge, score, reason and labels (before the novelty floor and MMR).
     `exclude`: TMDB ids to skip besides watched films, e.g. the Boxd In picks already shown."""
     cfg, rcfg = cfg or ExploreConfig(), rcfg or RecommendConfig()
     watched, weights, details = profile_inputs(films, client, rcfg)
@@ -157,8 +168,11 @@ def scored_pool(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, r
                       + cfg.bridge_weight * cands["bridge"]
                       - [franchise_penalty(details[k], opinions, rcfg) for k in keys])
     loved = loved_tokens(taste, cfg)
-    cands["reason"] = [_reason(details[k], k, counts, len(exposure), _bridge_token(facets, taste, loved, k, cfg), cfg)
-                       for k in keys]
+    novel = [_novel_token(details[k], k, counts, len(exposure), cfg) for k in keys]
+    bridges = [_bridge_token(facets, taste, loved, k, cfg) for k in keys]
+    cands["reason"] = [_reason(n, counts, b) for n, b in zip(novel, bridges)]
+    cands["new_label"] = [_label(n) for n in novel]
+    cands["bridge_label"] = [_label(b) for b in bridges]
     return cands.reset_index(drop=True), facets
 
 

@@ -24,7 +24,11 @@ function apply({ display, motion }: Settings) {
 
 function load(): Settings {
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+    const s = JSON.parse(localStorage.getItem(KEY) || "{}");
+    return {
+      display: ["light", "dark"].includes(s.display) ? s.display : "system",
+      motion: ["on", "off"].includes(s.motion) ? s.motion : "system",
+    };
   } catch {
     return DEFAULTS;
   }
