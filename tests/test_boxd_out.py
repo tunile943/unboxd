@@ -1,10 +1,9 @@
 from collections import Counter
 from dataclasses import replace
 
-from conftest import FakeTMDB, movie, rec
-from test_boxd_in import films
+from conftest import FakeTMDB, films, movie, rec
 from unboxd import boxd_out
-from unboxd.boxd_in import profile_inputs
+from unboxd.candidates import profile_inputs
 from unboxd.config import ExploreConfig, RecommendConfig
 from unboxd.evaluate import explore_leave_one_out
 from unboxd.features import build_facets

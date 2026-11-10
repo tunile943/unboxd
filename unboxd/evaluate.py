@@ -11,7 +11,8 @@ from __future__ import annotations
 import pandas as pd
 
 from . import boxd_out
-from .boxd_in import candidate_pool, recommend, select_seeds
+from .boxd_in import candidate_pool, recommend
+from .candidates import select_seeds
 from .config import ExploreConfig, RecommendConfig
 from .features import build_facets, facet_tokens, fetch_details
 from .weights import compute_weights
@@ -19,7 +20,8 @@ from .weights import compute_weights
 COLUMNS = ["name", "in_pool", "in_top_k"]
 
 
-def _held_out(films: pd.DataFrame, held: pd.DataFrame, max_held: int | None = None):
+def held_out(films: pd.DataFrame, held: pd.DataFrame, max_held: int | None = None):
+    """(name, tmdb_id, the other films re-weighted) for each held film, or a fixed sample of `max_held`."""
     if max_held is not None and len(held) > max_held:
         held = held.sample(max_held, random_state=0)
     for idx, film in held.iterrows():
@@ -33,7 +35,7 @@ def leave_one_out(films: pd.DataFrame, client, cfg: RecommendConfig, k: int = 50
     """One row per seed film (or a fixed sample of `max_held`): name, in_pool, in_top_k."""
     rows = [{"name": name, "in_pool": tmdb_id in set(candidate_pool(train, client, cfg)[0]["tmdb_id"]),
              "in_top_k": tmdb_id in set(recommend(train, client, cfg, k=k)["tmdb_id"])}
-            for name, tmdb_id, train in _held_out(films, select_seeds(films, cfg), max_held)]
+            for name, tmdb_id, train in held_out(films, select_seeds(films, cfg), max_held)]
     return pd.DataFrame(rows, columns=COLUMNS)
 
 
@@ -43,7 +45,7 @@ def explore_leave_one_out(films: pd.DataFrame, client, cfg: ExploreConfig, rcfg:
     liked = films[films["watched"] & (films["media_type"] == "movie") & films["tmdb_id"].notna()
                   & (films["weight"] >= min_weight)]
     rows = []
-    for name, tmdb_id, train in _held_out(films, liked, max_held):
+    for name, tmdb_id, train in held_out(films, liked, max_held):
         key, exposure = ("movie", tmdb_id), boxd_out.exposure_keys(train)
         details = fetch_details(exposure + [key], client, rcfg.workers)
         nov = boxd_out.novelty(build_facets(details), exposure, [key], cfg)[0]

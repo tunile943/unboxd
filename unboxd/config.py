@@ -68,18 +68,16 @@ class MatchConfig:
 
 @dataclass(frozen=True)
 class RecommendConfig:
-    seed_pct: float = 0.15  # top (and, for anti-seeds, bottom) share of rated films, ties included
+    # Tried and removed (see git history): anti-seeds, blending in TMDB recommendation strength, and a bonus
+    # for agreement between seeds. None helped leave-one-out; the last favored blockbusters.
+    seed_pct: float = 0.15  # top share of rated films, ties included
     min_seeds: int = 10
     max_seeds: int = 100
-    anti_min_seeds: int = 5
-    anti_max_seeds: int = 50
-    anti_weight: float = 0.0  # off: didn't help in leave-one-out; a dislike already lowers profile similarity
     discover_people: int = 5  # profile's top directors -> /discover
     discover_keywords: int = 5  # profile's top keywords -> /discover
     min_votes: int = 300  # quality floor for candidates (drops thin spin-offs; no leave-one-out loss vs. 50)
     exclude_genres: tuple[str, ...] = ("TV Movie",)  # TV specials and spin-offs, often with inflated ratings
     max_candidates: int = 300  # cap on TMDB-recommended candidates; discover picks are always kept
-    rec_weight: float = 0.0  # TMDB recs nominate, the profile ranks (best in leave-one-out)
     # place is ~1.0 for most US/English films, so it doesn't tell candidates apart
     facet_weights: dict[str, float] = field(
         default_factory=lambda: {"people": 0.35, "form": 0.2, "place": 0.0, "theme": 0.45})
@@ -90,7 +88,6 @@ class RecommendConfig:
     lone_seed_penalty: float = 0.03  # nominated by a single seed and no discover query; 0.05+ cost leave-one-out
     reliability_weight: float = 0.2  # discount for films nominated only by seeds with few TMDB votes
     reliable_seed_votes: int = 500  # a seed with this many votes has a trusted recommendation list (1000 lost Bugonia)
-    consensus_weight: float = 0.0  # bonus × log(#recommending seeds); off: favors blockbusters, hurt leave-one-out
     profile_min_abs_weight: float = 0.05  # near-neutral films barely move the profile
     franchise_weight: float = 1.0  # penalty per unit of net dislike for a TMDB collection
     franchise_dead_zone: float = 0.10  # net w' above -0.10 ("it was fine") isn't a dislike
@@ -107,7 +104,6 @@ class Config:
     explore: ExploreConfig = field(default_factory=ExploreConfig)
     match: MatchConfig = field(default_factory=MatchConfig)
     recommend: RecommendConfig = field(default_factory=RecommendConfig)
-    top_k: int = 20
 
 
 CONFIG = Config()

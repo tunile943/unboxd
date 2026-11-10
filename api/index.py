@@ -68,7 +68,7 @@ class ResolveRequest(BaseModel):
 class RecommendRequest(BaseModel):
     mode: Literal["in", "out"]
     films: list[Film]
-    k: int = Field(default=CONFIG.top_k, ge=1, le=50)
+    k: int = Field(default=20, ge=1, le=50)
     exclude: list[int] = Field(default=[], max_length=100, description="TMDB ids to skip, e.g. Boxd In picks")
 
 

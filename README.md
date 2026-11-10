@@ -69,6 +69,8 @@ Python dependencies for the function come from `requirements.txt` (keep it in sy
 | Title/year → TMDB id (movie, or TV series as fallback), confidence, reason, alternatives | `unboxd/resolve.py` | done |
 | Facet vectors (people / form / place / theme) | `unboxd/features.py` | done |
 | Taste profile per facet | `unboxd/profile.py` | done |
+| Candidates shared by both modes (seeds, TMDB lookups, filters) | `unboxd/candidates.py` | done |
+| Bayesian rating, franchise penalty | `unboxd/quality.py` | done |
 | Boxd In (exploit) | `unboxd/boxd_in.py` | done |
 | Boxd Out (explore) | `unboxd/boxd_out.py` | done |
 | MMR diversification | `unboxd/diversify.py` | done |
@@ -86,9 +88,9 @@ hard for films out less than a year, whose early ratings run high), minus a smal
 seed recommends, minus a
 penalty for TMDB collections you dislike on balance (average w′ ≤ −0.10, so mixed franchises aren't
 penalized) and minus a discount for films nominated only by seeds with thin TMDB data (< 500 votes),
-then diversified with MMR. A bonus for agreement between seeds was tested and left off: it favors
-blockbusters. Anti-seeds (penalizing films your least-liked films recommend) are implemented
-but off by default: in leave-one-out they didn't help, since dislikes already lower profile similarity.
+then diversified with MMR (relevance rescaled to 0–1 within the pool; λ 0.6 for Boxd In, 0.5 for Boxd Out).
+Tried and removed: a bonus for agreement between seeds (it favors blockbusters) and anti-seeds (penalizing
+films your least-liked films recommend), which didn't help since dislikes already lower profile similarity.
 
 ### Boxd Out
 

@@ -18,12 +18,13 @@ from dataclasses import replace
 import numpy as np
 import pandas as pd
 
-from .boxd_in import (_top_tokens, bayesian_rating, drop_genres, franchise_opinions, franchise_penalty,
-                      gather_candidates, name_ids, prior_strength, profile_inputs, select_seeds)
+from .candidates import (drop_genres, gather_candidates, name_ids, profile_inputs, select_seeds, top_tokens,
+                         watchlist_ids)
 from .config import ExploreConfig, RecommendConfig
 from .diversify import mmr
 from .features import FacetMatrix, Key, build_facets, facet_tokens, fetch_details, item_similarity
 from .profile import TasteProfile, build_profile, similarity
+from .quality import bayesian_rating, franchise_opinions, franchise_penalty, prior_strength
 
 PICK_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "score", "quality", "novelty", "bridge",
                 "reason", "on_watchlist"]
@@ -68,7 +69,7 @@ def explore_queries(counts: Counter, n_watched: int, profile: TasteProfile, face
     buckets += [(f"decade:{d}s", {"primary_release_date.gte": f"{d}-01-01", "primary_release_date.lte": f"{d + 9}-12-31"})
                 for d in cfg.decades if rare(f"decade:{d}s")]
     _, keyword_ids = name_ids(details)
-    kws = "|".join(str(keyword_ids[k]) for k in _top_tokens(profile, facets, "theme", "kw:", cfg.bridge_keywords)
+    kws = "|".join(str(keyword_ids[k]) for k in top_tokens(profile, facets, "theme", "kw:", cfg.bridge_keywords)
                    if k in keyword_ids)
     base = {"sort_by": "vote_average.desc", "vote_count.gte": cfg.min_votes}
     queries = [(token, {**f, **base}) for token, f in buckets]
@@ -132,7 +133,7 @@ def scored_pool(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, r
     counts = exposure_counts(details, exposure)
     queries = explore_queries(counts, len(exposure), build_profile(weights, facets), facets, details, cfg)
     seeds = select_seeds(films, rcfg)
-    cands = gather_candidates(seeds, seeds.iloc[:0], queries, watched | exclude, client,
+    cands = gather_candidates(seeds, queries, watched | exclude, client,
                               replace(rcfg, min_votes=cfg.min_votes))
     if cands.empty:
         return cands, facets
@@ -171,6 +172,4 @@ def recommend(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, rcf
     keys = [("movie", int(i)) for i in pool["tmdb_id"]]
     picks = pool.iloc[mmr(pool["score"].to_numpy(), item_similarity(facets, keys, cfg.mmr_facets), k,
                           mmr_lambda if mmr_lambda is not None else cfg.mmr_lambda)]
-    movies = films[films["tmdb_id"].notna() & (films["media_type"] == "movie")]
-    watchlist = set(movies.loc[movies["on_watchlist"], "tmdb_id"].astype(int))
-    return picks.assign(on_watchlist=picks["tmdb_id"].isin(watchlist))[PICK_COLUMNS].reset_index(drop=True)
+    return picks.assign(on_watchlist=picks["tmdb_id"].isin(watchlist_ids(films)))[PICK_COLUMNS].reset_index(drop=True)

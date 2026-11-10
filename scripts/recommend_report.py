@@ -9,13 +9,13 @@ Usage: python scripts/recommend_report.py <export.zip> [--cold] [--out] [--loo]
 import argparse
 import tempfile
 import time
-from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
 
 from unboxd import boxd_out
-from unboxd.boxd_in import recommend, select_seeds
+from unboxd.boxd_in import recommend
+from unboxd.candidates import select_seeds
 from unboxd.cache import SQLiteCache
 from unboxd.config import ExploreConfig, RecommendConfig
 from unboxd.evaluate import explore_leave_one_out, leave_one_out, list_metrics
@@ -26,11 +26,9 @@ from unboxd.weights import compute_weights
 
 
 def report_loo(films: pd.DataFrame, client, cfg: RecommendConfig) -> None:
-    print("\nleave-one-out (hide one favorite, does it come back?)")
-    for rw in (0.0, 0.25, 0.5, 1.0):
-        r = leave_one_out(films, client, replace(cfg, rec_weight=rw))
-        print(f"  rec_weight={rw}: in pool {r.in_pool.sum()}/{len(r)}, in top 50 {r.in_top_k.sum()}/{len(r)}"
-              f"  {list(r.loc[r.in_top_k, 'name'])}")
+    r = leave_one_out(films, client, cfg)
+    print(f"\nleave-one-out (hide one favorite, does it come back?): in pool {r.in_pool.sum()}/{len(r)}, "
+          f"in top 50 {r.in_top_k.sum()}/{len(r)}  {list(r.loc[r.in_top_k, 'name'])}")
 
 
 def report_out(films: pd.DataFrame, client, cfg: RecommendConfig, boxd_in_top50: set[int], loo: bool) -> None:
@@ -68,8 +66,8 @@ def main() -> None:
     picks = recommend(films, client, cfg)
     done = time.perf_counter()
 
-    seeds, anti = select_seeds(films, cfg), select_seeds(films, cfg, anti=True)
-    print(f"{len(seeds)} seeds (w' >= {seeds['weight'].min():.2f}), {len(anti)} anti-seeds; "
+    seeds = select_seeds(films, cfg)
+    print(f"{len(seeds)} seeds (w' >= {seeds['weight'].min():.2f}); "
           f"matching {matched - start:.1f}s, recommending {done - matched:.1f}s")
     pd.set_option("display.width", 200, "display.max_colwidth", 70)
     cols = ["title", "year", "score", "strength", "similarity", "reason", "on_watchlist"]

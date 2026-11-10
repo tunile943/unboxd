@@ -88,9 +88,6 @@ class TMDBClient:
     def recommendations(self, movie_id: int, page: int = 1) -> list[dict]:
         return self.get(f"/movie/{movie_id}/recommendations", page=page).get("results", [])
 
-    def similar(self, movie_id: int, page: int = 1) -> list[dict]:
-        return self.get(f"/movie/{movie_id}/similar", page=page).get("results", [])
-
     def discover(self, **filters: Any) -> list[dict]:
         """e.g. discover(sort_by='vote_average.desc', **{'vote_count.gte': 300, 'with_origin_country': 'JP'})"""
         return self.get("/discover/movie", **filters).get("results", [])

@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
@@ -53,6 +54,15 @@ def movie(director="", genres=(), keywords=(), cast=(), year=2000, country="US",
             "credits": {"crew": [{"id": 1, "name": director, "job": "Director"}] if director else [],
                         "cast": [{"name": c, "order": i} for i, c in enumerate(cast)]},
             "keywords": {"keywords": [{"id": i, "name": k} for i, k in enumerate(keywords)]}}
+
+
+def films(*rows):
+    """A films table like ingest + resolve produce, with defaults for the columns a test doesn't care about."""
+    defaults = {"year": 2000, "rating": 3.0, "liked": False, "rewatch_count": 0, "watched": True,
+                "on_watchlist": False, "last_watched": pd.NaT, "media_type": "movie"}
+    df = pd.DataFrame([{**defaults, **r} for r in rows])
+    df["last_watched"] = pd.to_datetime(df["last_watched"])
+    return df
 
 
 def rec(id, title="", year=2000, votes=500):
