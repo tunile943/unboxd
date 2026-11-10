@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Flap-o, small cut (BoxMark small in app/components/Logo.tsx) with fixed colors: tab bars can be light or dark. -->
+  <polygon points="8,22 32,10 32,18 16,26" fill="#6ee29e"/>
+  <polygon points="56,22 32,10 32,18 48,26" fill="#4fd488"/>
+  <polygon points="16,26 32,18 48,26 32,34" fill="#b5f4cc"/>
+  <polygon points="8,22 32,34 32,58 8,46" fill="#f0c08e"/>
+  <polygon points="32,34 56,22 56,46 32,58" fill="#d99558"/>
+</svg>
