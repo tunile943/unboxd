@@ -10,12 +10,14 @@ const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQ
 export type MockOptions = {
   films?: Film[]; // what /api/films returns (default: the sample diary)
   delayMs?: number; // per API call, to make loading states observable
+  resolved?: Record<string, unknown>[]; // extra /api/resolve answers (e.g. low-confidence matches), by name and year
   fail?: "films" | "resolve" | "recommend" | "extras"; // answer that endpoint with a 500
 };
 
 /** Serve /api/* from the recorded sample responses. /api/resolve matches by name and year, so any subset works. */
 export async function mockApi(page: Page, opts: MockOptions = {}) {
-  const resolved = new Map(fixture.resolved.map((f) => [`${f.name}|${f.year}`, f]));
+  const resolved = new Map<string, unknown>(
+    [...fixture.resolved, ...(opts.resolved ?? [])].map((f) => [`${(f as Film).name}|${(f as Film).year}`, f]));
   const wait = () => new Promise((r) => setTimeout(r, opts.delayMs ?? 0));
   await page.route("**/image.tmdb.org/**", (route) => route.fulfill({ body: PIXEL, contentType: "image/png" }));
   await page.route("**/api/**", async (route) => {
@@ -23,6 +25,16 @@ export async function mockApi(page: Page, opts: MockOptions = {}) {
     const endpoint = url.pathname.replace("/api/", "");
     await wait();
     if (opts.fail === endpoint) return route.fulfill({ status: 500, body: `mock ${endpoint} failure` });
+    const titles = fixture.resolved.map((f) => ({ id: f.tmdb_id, title: f.tmdb_title, year: f.tmdb_year,
+                                                    poster_path: null, media_type: f.media_type }));
+    if (endpoint === "search") {
+      const q = (url.searchParams.get("q") ?? "").toLowerCase();
+      return route.fulfill({ json: { results: titles.filter((t) => t.title?.toLowerCase().includes(q)).slice(0, 10) } });
+    }
+    if (endpoint.startsWith("title/")) {
+      const t = titles.find((t) => endpoint === `title/${t.media_type}/${t.id}`);
+      return t ? route.fulfill({ json: t }) : route.fulfill({ status: 404, body: "No such title on TMDB" });
+    }
     const body = route.request().postDataJSON();
     if (endpoint === "films") return route.fulfill({ json: { films: opts.films ?? fixture.films } });
     if (endpoint === "resolve")

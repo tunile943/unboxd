@@ -121,3 +121,30 @@ def test_extras(monkeypatch):
                                   {"films": [], "region": "usa"}])
 def test_extras_rejects_bad_requests(body):
     assert client.post("/api/extras", json=body).status_code == 422
+
+
+def test_search(api_with_fake_tmdb):
+    resp = client.get("/api/search", params={"q": "Crash", "year": 2004})
+    assert resp.status_code == 200 and resp.json()["results"][0]["id"] == 1640
+    assert client.get("/api/search", params={"q": ""}).status_code == 422
+
+
+def test_title_lookup(monkeypatch):
+    import api.index as api_index
+    monkeypatch.setattr(api_index, "CONFIG", replace(api_index.CONFIG, tmdb_token="test"))
+    monkeypatch.setattr(api_index, "tmdb_client", lambda: FakeTMDB({"md|7": {"id": 7, "title": "Heat"}}))
+    assert client.get("/api/title/movie/7").json()["title"] == "Heat"
+    assert client.get("/api/title/movie/8").status_code == 404
+    assert client.get("/api/title/person/7").status_code == 422
+
+
+def test_recommend_accepts_manual_fixes(monkeypatch):
+    import api.index as api_index
+    from test_boxd_in import recommend_setup
+    df, fake = recommend_setup()
+    monkeypatch.setattr(api_index, "CONFIG", replace(api_index.CONFIG, tmdb_token="test"))
+    monkeypatch.setattr(api_index, "tmdb_client", lambda: fake)
+    films = df.assign(last_watched=None).astype(object).where(df.notna(), None).to_dict(orient="records")
+    films = [f | {"match_confidence": "user"} for f in films]
+    resp = client.post("/api/recommend", json={"mode": "in", "films": films, "k": 3})
+    assert resp.status_code == 200

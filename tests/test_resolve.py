@@ -4,8 +4,8 @@ import requests
 
 from conftest import FakeTMDB
 from unboxd.config import MatchConfig
-from unboxd.resolve import (MATCH_COLUMNS, match_film, normalize_title, resolve_films,
-                            title_similarity, year_factor)
+from unboxd.resolve import (MATCH_COLUMNS, match_film, normalize_title, rank_candidates, resolve_films,
+                            title_brief, title_similarity, year_factor)
 from unboxd.tmdb import TMDBAuthError
 
 
@@ -190,3 +190,25 @@ def test_tv_details_only_fetched_for_close_titles():
     client = FakeTMDB({"tv|Blue|2020": [tv]})
     match_film("Blue", 2020, client)
     assert ("tvd", 7) not in client.calls
+
+
+@pytest.mark.parametrize("name, year", [("Crash", 2004), ("Heat", 1995), ("The Penguin", 2024), ("Samuel", 2024)])
+def test_rank_candidates_agrees_with_matching(fake_tmdb, name, year):
+    ranked = rank_candidates(name, year, fake_tmdb)
+    best = match_film(name, year, fake_tmdb)
+    assert (ranked[0]["id"], ranked[0]["media_type"]) == (best["tmdb_id"], best["media_type"])
+    assert set(ranked[0]) == {"id", "title", "year", "poster_path", "media_type"}
+
+
+def test_rank_candidates_caps_results():
+    client = FakeTMDB({"Twin|None": [cand(i, "Twin", 2000 + i) for i in range(15)]})
+    assert len(rank_candidates("Twin", None, client)) == 10
+
+
+def test_title_brief():
+    client = FakeTMDB({"md|7": {"id": 7, "title": "Heat", "release_date": "1995-12-15", "poster_path": "/h.jpg"},
+                       "tvd|9": {"id": 9, "name": "The Penguin", "first_air_date": "2024-09-19"}})
+    assert title_brief("movie", 7, client) == {"id": 7, "title": "Heat", "year": 1995, "poster_path": "/h.jpg",
+                                               "media_type": "movie"}
+    assert title_brief("tv", 9, client)["title"] == "The Penguin" and title_brief("tv", 9, client)["media_type"] == "tv"
+    assert title_brief("movie", 404, client) is None

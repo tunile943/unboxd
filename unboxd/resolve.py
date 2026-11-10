@@ -19,7 +19,7 @@ import requests
 
 from .config import MatchConfig
 
-MATCH_COLUMNS = ["tmdb_id", "tmdb_title", "tmdb_year", "media_type", "match_confidence",
+MATCH_COLUMNS = ["tmdb_id", "tmdb_title", "tmdb_year", "tmdb_poster", "media_type", "match_confidence",
                  "match_reason", "candidates"]
 
 
@@ -78,7 +78,7 @@ def _tv_as_movie(c: dict) -> dict:
 
 
 def _no_match(reason: str, candidates: list[dict] | None = None) -> dict:
-    return {"tmdb_id": None, "tmdb_title": None, "tmdb_year": None, "media_type": None,
+    return {"tmdb_id": None, "tmdb_title": None, "tmdb_year": None, "tmdb_poster": None, "media_type": None,
             "match_confidence": "none", "match_reason": reason,
             "candidates": candidates or []}
 
@@ -142,8 +142,27 @@ def _pick(cands: list[dict], year: int | None, norm: str, cfg: MatchConfig) -> d
         confidence = "low"
 
     return {"tmdb_id": best["id"], "tmdb_title": best.get("title"), "tmdb_year": best_year,
+            "tmdb_poster": best.get("poster_path"),
             "media_type": best.get("media_type", "movie"), "match_confidence": confidence,
             "match_reason": reason, "candidates": others}
+
+
+def rank_candidates(name: str, year: int | None, client: SearchClient,
+                    cfg: MatchConfig | None = None, limit: int = 10) -> list[dict]:
+    """Search results for a manual fix, best first, in the order matching would rank them."""
+    cfg = cfg or MatchConfig()
+    norm = normalize_title(name)
+    ranked = sorted(_search(client, name, year, norm, cfg), reverse=True,
+                    key=lambda c: score(title_similarity(norm, c), year_factor(year, candidate_year(c), cfg), c, cfg))
+    return [_brief(c) for c in ranked[:limit]]
+
+
+def title_brief(media_type: str, tmdb_id: int, client) -> dict | None:
+    """One title by id (a pasted TMDB link), or None if TMDB has no such id."""
+    d = client.tv_details(tmdb_id) if media_type == "tv" else client.details(tmdb_id)
+    if not d.get("id"):
+        return None
+    return _brief(_tv_as_movie(d) if media_type == "tv" else d)
 
 
 def match_film(name: str, year: int | None, client: SearchClient,

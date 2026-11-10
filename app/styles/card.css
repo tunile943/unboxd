@@ -65,6 +65,7 @@
 .u-why { margin: 0; font-size: 13.5px; font-weight: 700; color: var(--tg); }
 
 @media (max-width: 640px) {
+  .u-drawer { width: 100vw; border-left: 0; } /* only Match review opens one on phones */
   .u-act, .u-avail { min-height: 44px; }
   .u-offers { flex-direction: column; gap: 6px; }
   .u-olabel { padding-top: 0; }

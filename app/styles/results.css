@@ -157,3 +157,40 @@ img.poster { padding: 0; display: block; }
 }
 @media (max-width: 420px) { .u-lc-stats div { padding-inline: 8px; } .u-lc-stats dt { letter-spacing: .02em; } }
 .u-lc-foot { display: grid; gap: 2px; padding-top: 8px; border-top: 1px solid #e4dfd4; font-size: 12px; color: #5f5b68; }
+
+/* Match review: the header notice, the row buttons, the fix bar and the picker (a .u-drawer, full-screen on phones). */
+.u-notice { font: 700 12.5px var(--body); color: var(--to); background: var(--ow); border: 1px solid var(--lo); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.u-notice:focus-visible, .u-review-btn:focus-visible, .u-opt:focus-visible { outline: 2px solid var(--to); outline-offset: 2px; }
+.st.fix { color: var(--tb); }
+.u-review-btn { margin-left: 8px; font: 700 11.5px var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; cursor: pointer; vertical-align: 1px; }
+.u-fixbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: var(--bw); border: 1px solid var(--lb); font-size: 13.5px; font-weight: 600; }
+
+.u-review h3 { margin: 0 0 6px; font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--mute); }
+.u-diary { margin: 0; font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.u-reason { font: 700 11.5px var(--body); color: var(--to); background: var(--ow); border-radius: 6px; padding: 2px 8px; }
+.u-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.u-opts li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.u-opt-link { font: 700 12px var(--body); color: var(--tb); padding: 6px 4px; white-space: nowrap; }
+.u-opt { width: 100%; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; text-align: left;
+  padding: 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; font: inherit; }
+.u-opt:hover { border-color: var(--to); }
+.u-opt img, .u-opt-ph { width: 40px; height: 60px; border-radius: 5px; object-fit: cover; background: var(--line); display: block; }
+.u-opt-t { display: grid; gap: 2px; min-width: 0; }
+.u-opt-t b { font-size: 14px; overflow-wrap: anywhere; }
+.u-opt-t small { font-size: 12px; color: var(--mute); }
+.u-opt-go { font: 700 12px var(--body); color: var(--to); white-space: nowrap; }
+.u-search form { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 8px; margin-bottom: 8px; }
+.u-search label { display: grid; gap: 4px; font-size: 12px; color: var(--mute); font-weight: 600; }
+.u-search input { font: 600 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px; min-width: 0; }
+.u-search input:focus-visible { outline: 2px solid var(--to); outline-offset: 1px; }
+.u-review .fine { margin: 4px 0; font-size: 12.5px; color: var(--mute); }
+.u-review-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 12px; }
+
+@media (max-width: 640px) {
+  .u-review .u-search { position: sticky; top: -20px; z-index: 1; background: var(--surface); padding-block: 8px; }
+  .u-review-btn, .u-notice { min-height: 44px; }
+  .u-review .u-x { width: 44px; height: 44px; }
+  .u-search input { min-height: 44px; font-size: 16px; }
+  .u-opt { min-height: 60px; }
+  .u-opt-link { display: inline-flex; align-items: center; min-height: 44px; }
+}

@@ -2,29 +2,36 @@
 
 import { useState } from "react";
 import type { Film } from "@/lib/export";
+import type { Fix } from "../useUnboxd";
+import { MatchReview } from "./MatchReview";
 
 const MATCH = {
   high: ["ok", "✓", "Matched"],
   low: ["q", "?", "Unsure match"],
   none: ["no", "–", "Not found"],
+  user: ["fix", "✓", "Manually fixed"],
 } as const;
 
 const PAGE = 100;
 
-const needsReview = (f: Film) => f.match_confidence === "low" || f.match_confidence === "none";
+export const needsReview = (f: Film) => f.match_confidence === "low" || f.match_confidence === "none";
+const reviewable = (f: Film) => needsReview(f) || f.match_confidence === "user"; // fixed rows stay in the filter
 
 function stars(rating: number | null) {
   if (rating === null) return "—";
   return "★".repeat(Math.floor(rating)) + (rating % 1 ? "½" : "");
 }
 
-export function DataTable({ films }: { films: Film[] }) {
-  const [onlyReview, setOnlyReview] = useState(false);
+export function DataTable({ films, reviewFirst = false, onFix }:
+  { films: Film[]; reviewFirst?: boolean; onFix: (film: Film, fix: Fix) => void }) {
+  const [onlyReview, setOnlyReview] = useState(reviewFirst);
+  const [reviewing, setReviewing] = useState<{ film: Film; button: HTMLButtonElement } | null>(null);
   const [shown, setShown] = useState(PAGE);
   const watched = films.filter((f) => f.watched);
   const reviewCount = watched.filter(needsReview).length;
+  const fixedCount = watched.filter((f) => f.match_confidence === "user").length;
   const sorted = [...watched].sort((a, b) => (b.weight ?? -2) - (a.weight ?? -2));
-  const all = onlyReview ? sorted.filter(needsReview) : sorted;
+  const all = onlyReview ? sorted.filter(reviewable) : sorted;
   const rows = all.slice(0, shown);
   const left = all.length - rows.length;
 
@@ -37,9 +44,9 @@ export function DataTable({ films }: { films: Film[] }) {
         </span>
       </div>
       <div className="u-chips">
-        <button className="u-chip" type="button" aria-pressed={onlyReview} disabled={!reviewCount && !onlyReview}
+        <button className="u-chip" type="button" aria-pressed={onlyReview} disabled={!watched.some(reviewable) && !onlyReview}
                 onClick={() => { setOnlyReview((v) => !v); setShown(PAGE); }}>
-          Needs review ({reviewCount})
+          Needs review ({reviewCount}{fixedCount ? ` · ${fixedCount} fixed` : ""})
         </button>
         <span className="u-stamp">Match: ✓ matched · ? unsure · – not found</span>
       </div>
@@ -58,18 +65,25 @@ export function DataTable({ films }: { films: Film[] }) {
           </thead>
           <tbody>
             {rows.map((f, i) => {
-              const [st, mark, label] = MATCH[f.match_confidence ?? "none"];
+              const [st, mark, matchLabel] = MATCH[f.match_confidence ?? "none"];
+              const label = f.match_confidence === "user" ? f.match_reason ?? matchLabel : matchLabel;
               const w = f.weight;
               return (
-                <tr key={`${f.name}-${f.year}-${f.tmdb_id ?? i}`} data-st={st}>
+                <tr key={`${f.name}-${f.year}-${i}`} data-st={st}>
                   <td className="stc">
-                    <span className={`st ${st}`} role="img" aria-label={label} title={f.match_reason ? `${label}: ${f.match_reason}` : label}>
+                    <span className={`st ${st}`} role="img" aria-label={label} title={f.match_reason && f.match_confidence !== "user" ? `${label}: ${f.match_reason}` : label}>
                       {mark}
                     </span>
                   </td>
                   <td className="film">
                     {f.name}
                     {f.media_type === "tv" && <span className="muted"> · TV</span>}
+                    {reviewable(f) && (
+                      <button className="u-review-btn" type="button" aria-haspopup="dialog"
+                              onClick={(e) => setReviewing({ film: f, button: e.currentTarget })}>
+                        {needsReview(f) ? "Review" : "Change"}<span className="sr-only"> match for {f.name}</span>
+                      </button>
+                    )}
                   </td>
                   <td className="yr">{f.year ?? "—"}</td>
                   {w === null ? (
@@ -96,6 +110,10 @@ export function DataTable({ films }: { films: Film[] }) {
             )}
           </tbody>
         </table>
+        {reviewing && (
+          <MatchReview film={reviewing.film} returnTo={reviewing.button}
+                       onFix={(fix) => onFix(reviewing.film, fix)} onClose={() => setReviewing(null)} />
+        )}
         {left > 0 && (
           <button className="u-chip u-more" type="button" onClick={() => setShown((n) => n + PAGE)}>
             Show {Math.min(PAGE, left)} more ({left} left)

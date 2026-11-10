@@ -12,14 +12,14 @@ from functools import cache
 from typing import Any, Literal
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
 
 from unboxd import boxd_in, boxd_out
 from unboxd.config import CONFIG
 from unboxd.film_info import extras as film_extras
 from unboxd.ingest import EXPORT_FILES, load_csvs
-from unboxd.resolve import resolve_films
+from unboxd.resolve import rank_candidates, resolve_films, title_brief
 from unboxd.tmdb import TMDBAuthError, TMDBClient
 from unboxd.weights import compute_weights
 
@@ -56,8 +56,9 @@ class Film(BaseModel):
     tmdb_id: int | None = None
     tmdb_title: str | None = None
     tmdb_year: int | None = None
+    tmdb_poster: str | None = None
     media_type: Literal["movie", "tv"] | None = None
-    match_confidence: Literal["high", "low", "none"] | None = None
+    match_confidence: Literal["high", "low", "none", "user"] | None = None  # user = fixed in Match review
     match_reason: str | None = None
     candidates: list[dict[str, Any]] = []
 
@@ -162,3 +163,28 @@ def extras(req: ExtrasRequest) -> dict:
     except TMDBAuthError as e:
         raise HTTPException(502, str(e)) from e
     return {"extras": {str(k): v for k, v in found.items()}}
+
+
+@app.get("/api/search")
+def search(q: str = Query(min_length=1, max_length=200), year: int | None = Query(None, ge=1870, le=2100)) -> dict:
+    """TMDB movies and limited series for Match review, ranked like matching ranks them."""
+    if not CONFIG.tmdb_token:
+        raise HTTPException(503, "TMDB token not configured")
+    try:
+        return {"results": rank_candidates(q, year, tmdb_client(), CONFIG.match)}
+    except TMDBAuthError as e:
+        raise HTTPException(502, str(e)) from e
+
+
+@app.get("/api/title/{media_type}/{tmdb_id}")
+def title(media_type: Literal["movie", "tv"], tmdb_id: int) -> dict:
+    """One title by TMDB id, for a pasted TMDB link."""
+    if not CONFIG.tmdb_token:
+        raise HTTPException(503, "TMDB token not configured")
+    try:
+        found = title_brief(media_type, tmdb_id, tmdb_client())
+    except TMDBAuthError as e:
+        raise HTTPException(502, str(e)) from e
+    if not found:
+        raise HTTPException(404, "No such title on TMDB")
+    return found

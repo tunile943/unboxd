@@ -22,16 +22,20 @@ export type Film = {
   tmdb_id?: number | null;
   tmdb_title?: string | null;
   tmdb_year?: number | null;
+  tmdb_poster?: string | null;
   media_type?: "movie" | "tv" | null;
-  match_confidence?: "high" | "low" | "none" | null;
+  match_confidence?: "high" | "low" | "none" | "user" | null; // user = set in Match review
   match_reason?: string | null;
-  candidates?: {
-    id: number;
-    title: string | null;
-    year: number | null;
-    poster_path: string | null;
-    media_type: "movie" | "tv";
-  }[];
+  candidates?: Title[];
+};
+
+/** A TMDB movie or limited series, as matching and search return it. */
+export type Title = {
+  id: number;
+  title: string | null;
+  year: number | null;
+  poster_path: string | null;
+  media_type: "movie" | "tv";
 };
 
 export type Pick = {
@@ -143,4 +147,31 @@ export async function recommend(films: Film[], mode: "in" | "out", exclude: numb
 export async function fetchExtras(picks: Pick[], region: string): Promise<Record<string, Extras>> {
   const films = picks.map((p) => ({ tmdb_id: p.tmdb_id, language: p.language }));
   return (await post<{ extras: Record<string, Extras> }>("/api/extras", { films, region })).extras;
+}
+
+async function get<T>(path: string): Promise<T> {
+  const resp = await fetch(path);
+  if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
+  return resp.json();
+}
+
+/** TMDB movies and limited series for a typed title, best first. */
+export async function searchTitles(q: string, year: number | null): Promise<Title[]> {
+  const params = new URLSearchParams({ q, ...(year ? { year: String(year) } : {}) });
+  return (await get<{ results: Title[] }>(`/api/search?${params}`)).results;
+}
+
+/** A pasted TMDB link (themoviedb.org/movie/123-name or /tv/123), else null. */
+export function parseTmdbLink(text: string): { media_type: "movie" | "tv"; id: number } | null {
+  const m = text.match(/themoviedb\.org\/(?:[a-z-]+\/)?(movie|tv)\/(\d+)/i);
+  return m ? { media_type: m[1].toLowerCase() as "movie" | "tv", id: Number(m[2]) } : null;
+}
+
+export async function lookupTitle(media_type: "movie" | "tv", id: number): Promise<Title | null> {
+  try {
+    return await get<Title>(`/api/title/${media_type}/${id}`);
+  } catch (err) {
+    if (err instanceof Error && err.message.includes(" 404:")) return null;
+    throw err;
+  }
 }
