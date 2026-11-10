@@ -36,9 +36,8 @@ test("picking another match fixes the row and Update picks sends it", async ({ p
   await page.getByRole("button", { name: "2 films need a check" }).click();
   await review(page, "Obsession").click();
   const dlg = page.getByRole("dialog", { name: "Match review" });
-  await expect(dlg.getByText("Year differs by 1")).toBeVisible();
-  await expect(dlg.getByRole("region", { name: "Current match" })).toContainText("2026");
-  await dlg.getByRole("region", { name: "Other matches" }).getByRole("button", { name: /Obsession 2025/ }).click();
+  await expect(dlg.getByRole("region", { name: "We matched it to" })).toContainText("2026 · 1 year off your diary");
+  await dlg.getByRole("region", { name: "Not it? Pick the right one" }).getByRole("button", { name: "Choose Obsession (2025)" }).click();
 
   await expect(dlg).toHaveCount(0);
   await expect(row(page, "Obsession").getByRole("button", { name: "Change match for Obsession" })).toBeFocused();
@@ -65,9 +64,9 @@ test("search finds a film by title or by a pasted TMDB link", async ({ page }) =
   await expect(dlg.getByText("No other matches on TMDB.")).toBeVisible();
 
   await box.fill("https://www.themoviedb.org/movie/666277-past-lives");
-  await expect(dlg.getByRole("button", { name: /Past Lives/ })).toBeVisible();
+  await expect(dlg.getByRole("button", { name: /^Choose Past Lives/ })).toBeVisible();
   await box.fill("arriv");
-  await dlg.getByRole("button", { name: /Arrival 2016/ }).click();
+  await dlg.getByRole("button", { name: "Choose Arrival (2016)" }).click();
   await expect(row(page, lost.name).getByRole("img", { name: "Manually fixed" })).toBeVisible();
 });
 
@@ -94,7 +93,7 @@ test("phone: the picker is full-screen with large targets", async ({ page }, inf
   await review(page, "Obsession").click();
   const dlg = page.getByRole("dialog", { name: "Match review" });
   expect(Math.round((await dlg.boundingBox())!.width)).toBe(page.viewportSize()!.width);
-  for (const b of await dlg.locator(".u-opt").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  for (const b of await dlg.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
 
@@ -102,7 +101,7 @@ test("confirming the current match isn't a pending fix", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "2 films need a check" }).click();
   await review(page, "Obsession").click();
-  await page.getByRole("region", { name: "Current match" }).getByRole("button").click();
+  await page.getByRole("button", { name: "Yes, this is the one" }).click();
   await expect(row(page, "Obsession").getByRole("img", { name: "Manually confirmed" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Needs review (1 · 1 fixed)" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Update picks" })).toHaveCount(0);
@@ -117,4 +116,38 @@ test("the header notice turns the filter back on", async ({ page }) => {
   await expect(chip).toHaveAttribute("aria-pressed", "false");
   await notice.click();
   await expect(page.getByRole("button", { name: /^Needs review/ })).toHaveAttribute("aria-pressed", "true");
+});
+
+
+test("search stays folded while there's a match to confirm, and searches only once opened", async ({ page }) => {
+  await open(page);
+  let searches = 0;
+  page.on("request", (r) => r.url().includes("/api/search") && searches++);
+  await page.getByRole("button", { name: "2 films need a check" }).click();
+  await review(page, "Obsession").click();
+  const dlg = page.getByRole("dialog", { name: "Match review" });
+  const disclosure = dlg.getByRole("button", { name: /^Search TMDB/ });
+  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await expect(dlg.getByRole("searchbox")).toHaveCount(0);
+  await page.waitForTimeout(500);
+  expect(searches).toBe(0);
+
+  await disclosure.click();
+  await expect(disclosure).toHaveAttribute("aria-expanded", "true");
+  await dlg.getByRole("searchbox", { name: "Title or TMDB link" }).fill("Past Lives");
+  await expect(dlg.getByRole("button", { name: /^Choose Past Lives/ })).toBeVisible();
+  expect(searches).toBeGreaterThan(0);
+
+  await dlg.getByRole("button", { name: "Close" }).click(); // Escape in a search box clears it first; reopening keeps it
+  await review(page, "Obsession").click();
+  await expect(dlg.getByRole("searchbox", { name: "Title or TMDB link" })).toHaveValue("Past Lives");
+});
+
+test("a film with nothing to choose from opens straight into search", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "2 films need a check" }).click();
+  await review(page, lost.name).click();
+  const dlg = page.getByRole("dialog", { name: "Match review" });
+  await expect(dlg.getByRole("button", { name: /^Search TMDB/ })).toHaveAttribute("aria-expanded", "true");
+  await expect(dlg.getByRole("searchbox", { name: "Title or TMDB link" })).toBeFocused();
 });

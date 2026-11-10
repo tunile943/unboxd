@@ -1,56 +1,80 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { type Film, lookupTitle, parseTmdbLink, searchTitles, type Title } from "@/lib/export";
 import type { Fix } from "../useUnboxd";
 
 const KIND = { movie: "Film", tv: "Limited series" };
+const tmdbUrl = (t: Title) => `https://www.themoviedb.org/${t.media_type}/${t.id}`;
+const poster = (t: Title, w: number) => `https://image.tmdb.org/t/p/w${w}${t.poster_path}`;
 
-function Option({ t, action, onPick }: { t: Title; action: string; onPick: () => void }) {
+// What was typed in each film's search, so reopening its picker picks up where you left off (this session only).
+const typed = new Map<string, { q: string; year: string }>();
+
+function Poster({ t, big = false }: { t: Title; big?: boolean }) {
+  return t.poster_path
+    ? <img className="u-rv-ps" src={poster(t, big ? 154 : 92)} alt="" width={big ? 72 : 40} height={big ? 108 : 60} loading="lazy" />
+    : <span className="u-rv-ps" aria-hidden="true" />;
+}
+
+/** A runner-up or search result: smaller and plainer than the current match. */
+function Alternative({ t, diaryYear, onPick }: { t: Title; diaryYear: number | null; onPick: () => void }) {
+  const sameYear = diaryYear !== null && t.year === diaryYear;
   return (
-    <li>
-      <button className="u-opt" type="button" onClick={onPick}>
-        {t.poster_path ? (
-          <img src={`https://image.tmdb.org/t/p/w92${t.poster_path}`} alt="" width={40} height={60} loading="lazy" />
-        ) : (
-          <span className="u-opt-ph" aria-hidden="true" />
-        )}
-        <span className="u-opt-t">
-          <b>{t.title ?? "Untitled"}</b>
-          <small>{[t.year, KIND[t.media_type]].filter(Boolean).join(" · ")}</small>
-        </span>
-        <span className="u-opt-go">{action}</span>
+    <li className="u-alt">
+      <Poster t={t} />
+      <span className="u-alt-t">
+        <b>{t.title ?? "Untitled"}</b>
+        <small>
+          {t.year && <span className={sameYear ? "u-yr-ok" : undefined}>{t.year}{sameYear && <> ✓<span className="sr-only">, same year as your diary</span></>}</span>}
+          {t.year && " · "}{KIND[t.media_type]} · {/* namesakes look alike: TMDB's page has cast and plot */}
+          <a href={tmdbUrl(t)} target="_blank" rel="noreferrer">TMDB ↗<span className="sr-only"> {t.title}</span></a>
+        </small>
+      </span>
+      <button className="u-choose" type="button" onClick={onPick}>
+        Choose<span className="sr-only"> {t.title}{t.year ? ` (${t.year})` : ""}</span>
       </button>
-      {/* Namesakes look alike here: the TMDB page shows cast and plot to tell them apart. */}
-      <a className="u-opt-link" href={`https://www.themoviedb.org/${t.media_type}/${t.id}`} target="_blank" rel="noreferrer">
-        TMDB ↗<span className="sr-only"> {t.title}{t.year ? ` (${t.year})` : ""}</span>
-      </a>
     </li>
   );
 }
 
 type Search = { state: "idle" | "loading" | "done" | "error"; results: Title[] };
 
-/** Match review: confirm the current match, pick a runner-up, search TMDB (or paste a TMDB link), or skip. */
+/**
+ * Match review: the current match first and largest, then the runner-ups matching found, then (folded unless there's
+ * nothing else to choose from) a TMDB search that also takes a pasted TMDB link, and "Not on TMDB".
+ */
 export function MatchReview({ film, returnTo, onFix, onClose }:
   { film: Film; returnTo: HTMLElement | null; onFix: (fix: Fix) => void; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const [q, setQ] = useState(film.name);
-  const [year, setYear] = useState(film.year ? String(film.year) : "");
+  const id = useId();
+  const memo = `${film.name}|${film.year}`;
+  const current: Title | null = film.tmdb_id && film.media_type
+    ? { id: film.tmdb_id, title: film.tmdb_title ?? null, year: film.tmdb_year ?? null, poster_path: film.tmdb_poster ?? null,
+        media_type: film.media_type }
+    : null;
+  const others = (film.candidates ?? []).filter((c) => !(c.id === film.tmdb_id && c.media_type === film.media_type));
+  const [open, setOpen] = useState(() => typed.has(memo) || (!current && !others.length));
+  const [q, setQ] = useState(typed.get(memo)?.q ?? film.name);
+  const [year, setYear] = useState(typed.get(memo)?.year ?? (film.year ? String(film.year) : ""));
   const [search, setSearch] = useState<Search>({ state: "idle", results: [] });
 
   useEffect(() => {
     const dlg = ref.current!;
     if (!dlg.open) dlg.showModal();
-    if (!film.tmdb_id) input.current?.focus(); // nothing to confirm: start at search
+    if (!current && !others.length) input.current?.focus(); // nothing to choose from: start at search
     return () => returnTo?.focus();
-  }, [returnTo, film.tmdb_id]);
+  }, [returnTo]); // on open only
 
-  // Debounced; a pasted TMDB link looks that one title up instead.
+  useEffect(() => {
+    if (open) typed.set(memo, { q, year });
+  }, [open, memo, q, year]);
+
+  // Only while open (a routine confirm costs no TMDB call). Debounced; a pasted TMDB link looks that one title up.
   useEffect(() => {
     const text = q.trim();
-    if (text.length < 2) return setSearch({ state: "idle", results: [] });
+    if (!open || text.length < 2) return setSearch({ state: "idle", results: [] });
     let live = true;
     setSearch({ state: "loading", results: [] }); // old results go at once, so they can't be picked mid-typing
     const timer = setTimeout(() => {
@@ -65,74 +89,98 @@ export function MatchReview({ film, returnTo, onFix, onClose }:
       live = false;
       clearTimeout(timer);
     };
-  }, [q, year]);
+  }, [open, q, year]);
 
   const pick = (fix: Fix) => {
     onFix(fix);
     ref.current?.close();
   };
-  const current: Title | null = film.tmdb_id && film.media_type
-    ? { id: film.tmdb_id, title: film.tmdb_title ?? null, year: film.tmdb_year ?? null, poster_path: film.tmdb_poster ?? null,
-        media_type: film.media_type }
-    : null;
-  const others = (film.candidates ?? []).filter((c) => !(c.id === film.tmdb_id && c.media_type === film.media_type));
   const key = (t: { media_type?: string | null; id?: number | null }) => `${t.media_type}:${t.id}`; // ids repeat across movie/tv
   const shown = new Set([key({ media_type: film.media_type, id: film.tmdb_id }), ...others.map(key)]);
   const found = search.results.filter((c) => !shown.has(key(c)));
+  const yearsOff = current?.year && film.year ? Math.abs(current.year - film.year) : 0;
+  const flag = yearsOff ? `${current!.year} · ${yearsOff} ${yearsOff === 1 ? "year" : "years"} off your diary`
+    : film.match_confidence === "user" ? null : film.match_reason;
 
   return (
-    <dialog ref={ref} className="u-drawer u-review" aria-labelledby="review-title" onClose={onClose}
+    <dialog ref={ref} className="u-drawer u-review" aria-labelledby={`${id}-t`} onClose={onClose}
             onClick={(e) => e.target === e.currentTarget && e.currentTarget.close()}>
       <div className="u-drawer-in">
         <header>
-          <h2 id="review-title">Match review</h2>
+          <h2 id={`${id}-t`}>Match review</h2>
           <button className="u-x" type="button" aria-label="Close" onClick={() => ref.current?.close()}>×</button>
         </header>
-        <p className="u-diary">
-          Your diary: <b>{film.name}</b>{film.year ? ` (${film.year})` : ""}
-          {film.match_reason && <span className="u-reason">{film.match_reason}</span>}
-        </p>
+
+        <div>
+          <p className="u-rv-lbl">Your diary</p>
+          <p className="u-rv-diary"><b>{film.name}</b>{film.year && <span>{film.year}</span>}</p>
+        </div>
 
         {current && (
-          <section aria-labelledby="rv-current">
-            <h3 id="rv-current">Current match</h3>
-            <ul className="u-opts"><Option t={current} action="This is right" onPick={() => pick("confirm")} /></ul>
-          </section>
-        )}
-        {others.length > 0 && (
-          <section aria-labelledby="rv-others">
-            <h3 id="rv-others">Other matches</h3>
-            <ul className="u-opts">{others.map((c) => <Option key={`${c.media_type}${c.id}`} t={c} action="Use this" onPick={() => pick(c)} />)}</ul>
+          <section aria-labelledby={`${id}-c`}>
+            <p className="u-rv-lbl" id={`${id}-c`}>{film.match_confidence === "user" ? "Matched to" : "We matched it to"}</p>
+            <div className="u-rv-hero">
+              <Poster t={current} big />
+              <div>
+                <h3>{current.title ?? "Untitled"}</h3>
+                {flag && <span className="u-rv-flag">{flag}</span>}
+                <p className="u-rv-meta">
+                  {!yearsOff && current.year && `${current.year} · `}{KIND[current.media_type]} · <a href={tmdbUrl(current)} target="_blank" rel="noreferrer">See on TMDB ↗</a>
+                </p>
+                <button className="u-rv-yes" type="button" onClick={() => pick("confirm")}>Yes, this is the one</button>
+              </div>
+            </div>
           </section>
         )}
 
-        <section aria-labelledby="rv-search" className="u-search">
-          <h3 id="rv-search">Search TMDB</h3>
-          <form role="search" onSubmit={(e) => e.preventDefault()}>
-            <label>
-              <span>Title or TMDB link</span>
-              <input ref={input} type="search" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
-            </label>
-            <label className="yr">
-              <span>Year</span>
-              <input inputMode="numeric" maxLength={4} value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))} />
-            </label>
-          </form>
-          <div aria-live="polite">
-            {search.state === "loading" && <p className="fine">Searching…</p>}
-            {search.state === "error" && <p className="fine">Search failed. Try again.</p>}
-            {search.state === "done" && (
-              <p className="fine">{found.length ? `${found.length} ${found.length === 1 ? "result" : "results"}` : "No other matches on TMDB."}</p>
-            )}
-          </div>
-          {search.state === "done" && found.length > 0 && (
-            <ul className="u-opts">{found.map((c) => <Option key={`${c.media_type}${c.id}`} t={c} action="Use this" onPick={() => pick(c)} />)}</ul>
+        {others.length > 0 && (
+          <section aria-labelledby={`${id}-o`}>
+            <p className="u-rv-or" id={`${id}-o`}>{current ? "Not it? Pick the right one" : "Pick the right one"}</p>
+            <ul className="u-alts">
+              {others.map((c) => <Alternative key={key(c)} t={c} diaryYear={film.year} onPick={() => pick(c)} />)}
+            </ul>
+          </section>
+        )}
+
+        <div className={`u-rv-search${open ? " open" : ""}`}>
+          <button className="u-rv-disc" type="button" aria-expanded={open} aria-controls={`${id}-s`}
+                  onClick={() => setOpen((o) => !o)}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <span>Search TMDB {!open && <small>· or paste a TMDB link</small>}</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={open ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} /></svg>
+          </button>
+          {open && (
+            <div id={`${id}-s`} className="u-rv-sbody">
+              <form role="search" onSubmit={(e) => e.preventDefault()}>
+                <label>
+                  <span>Title or TMDB link</span>
+                  <input ref={input} type="search" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
+                </label>
+                <label>
+                  <span>Year</span>
+                  <input inputMode="numeric" maxLength={4} value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))} />
+                </label>
+              </form>
+              <p className="fine" aria-live="polite">
+                {search.state === "loading" ? "Searching…"
+                  : search.state === "error" ? "Search failed. Try again."
+                  : search.state === "done" ? (found.length
+                    ? `${found.length} more ${found.length === 1 ? "result" : "results"}${current || others.length ? ", not listed above" : ""}`
+                    : "No other matches on TMDB.")
+                  : ""}
+              </p>
+              {search.state === "done" && found.length > 0 && (
+                <ul className="u-alts">
+                  {found.map((c) => <Alternative key={key(c)} t={c} diaryYear={film.year} onPick={() => pick(c)} />)}
+                </ul>
+              )}
+            </div>
           )}
-        </section>
+        </div>
 
         <footer className="u-review-foot">
-          <button className="btn ghost sm" type="button" onClick={() => pick("skip")}>Not on TMDB</button>
-          <span className="fine">Leaves this film out of your recommendations.</span>
+          <span className="fine">Can&apos;t find it anywhere?</span>
+          <button className="u-choose" type="button" onClick={() => pick("skip")}>Not on TMDB</button>
         </footer>
       </div>
     </dialog>
