@@ -41,6 +41,9 @@ export type Pick = {
   poster_path: string | null;
   reason: string;
   on_watchlist: boolean;
+  // Boxd Out only: what's new for you ("Korean", "War", "1960s") and the loved person or theme bridging to it.
+  new_label?: string | null;
+  bridge_label?: string | null;
 };
 
 export const RESOLVE_BATCH = 100;

@@ -1,100 +1,27 @@
-:root {
-  --bg: #fafaf9;
-  --fg: #1c1917;
-  --muted: #78716c;
-  --border: #e7e5e4;
-  --accent: #ea580c;
-  --surface: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14120f;
-    --fg: #f5f5f4;
-    --muted: #a8a29e;
-    --border: #2e2a26;
-    --accent: #fb923c;
-    --surface: #1c1917;
-  }
-}
-
 * { box-sizing: border-box; }
-
+html { -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
+  margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 var(--body);
 }
+h1, h2, h3, h4, h5 { margin: 0; line-height: 1.15; text-wrap: balance; }
+p { margin: 0; }
+a, .link { color: var(--to); }
+:focus-visible { outline: 2px solid var(--lo); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+img { max-width: 100%; }
 
-main { max-width: 880px; margin: 0 auto; padding: 48px 16px; }
-h1 { margin: 0; font-size: 2.25rem; letter-spacing: -0.02em; }
-.muted { color: var(--muted); }
-.error { color: #dc2626; }
+.page { max-width: 1120px; margin: 0 auto; padding-block: 0 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+button.link { padding: 0; border: 0; background: none; text-decoration: underline; cursor: pointer; }
+button.link:disabled { color: var(--mute); cursor: default; }
+.muted { color: var(--mute); }
+.error { color: var(--red); }
 
-.upload {
-  display: block;
-  margin: 24px 0 8px;
-  padding: 24px;
-  border: 1px dashed var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  cursor: pointer;
-}
-
-.tabs { display: flex; gap: 4px; margin: 32px 0 16px; border-bottom: 1px solid var(--border); }
-.tabs button {
-  padding: 8px 14px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--muted);
-  font: inherit;
-  cursor: pointer;
-}
-.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
-
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
-th { color: var(--muted); font-weight: 500; }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-
-.picks { list-style: none; padding: 0; margin: 0; }
-.picks li { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.picks img, .poster-placeholder { flex: none; width: 46px; height: 69px; border-radius: 4px; background: var(--border); object-fit: cover; }
-.badge { margin-left: 8px; font-size: 0.75rem; color: var(--accent); white-space: nowrap; }
-
-footer { margin-top: 48px; font-size: 0.8rem; }
-
-button.link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
-button.link:disabled { color: var(--muted); cursor: default; }
-
-.sample-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 24px; padding: 6px 14px; border: 1.5px dashed var(--accent); border-radius: 999px; font-size: 0.9rem; width: fit-content; max-width: 100%; }
-.info { width: 20px; height: 20px; padding: 0; border: 1.5px solid currentColor; border-radius: 50%; background: none; color: var(--accent); font: 700 11px/1 ui-sans-serif, system-ui, sans-serif; cursor: pointer; }
-
-/* The sample's shipping label stays light in both themes, like a real sticker. */
-.label-dialog { width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 0; background: transparent; overflow: auto; }
-.label-dialog::backdrop { background: rgb(10 8 14 / 0.45); }
-.label-card { position: relative; display: grid; gap: 12px; padding: 16px 18px 14px; border: 1px solid #cfc8ba; border-radius: 8px; background: #fbfaf6; color: #1d1b22; font-size: 0.85rem; line-height: 1.45; }
-.label-card h2, .label-card h3, .label-card p { margin: 0; }
-.label-close { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0; background: none; color: #5f5b68; font-size: 22px; cursor: pointer; }
-.label-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 28px 8px 0; border-bottom: 1px solid #e4dfd4; font: 500 0.65rem ui-monospace, Menlo, monospace; letter-spacing: 0.08em; color: #5f5b68; }
-.label-top b { color: #1d1b22; font-weight: 500; }
-.barcode { width: 96px; height: 20px; opacity: 0.45; background: repeating-linear-gradient(90deg, #1d1b22 0 1px, transparent 1px 3px, #1d1b22 3px 5px, transparent 5px 6px, #1d1b22 6px 7px, transparent 7px 10px); }
-.label-to { display: grid; gap: 2px; padding: 10px 12px; border: 2px solid #1d1b22; border-radius: 4px; }
-.label-to small, .label-stats dt { font: 500 0.65rem ui-monospace, Menlo, monospace; letter-spacing: 0.1em; text-transform: uppercase; color: #5f5b68; }
-.label-to h2 { font-size: 1.5rem; letter-spacing: -0.03em; }
-.label-to p, .label-card footer { color: #5f5b68; font-size: 0.8rem; }
-.label-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border: 1px solid #d8d3c8; border-radius: 4px; }
-.label-stats div { padding: 6px 10px; border-left: 1px solid #d8d3c8; }
-.label-stats div:first-child { border-left: 0; }
-.label-stats dd { margin: 0; font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-.label-card section { display: grid; gap: 4px; }
-.label-card h3 { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #5f5b68; }
-.label-card h3.love { color: #00753a; }
-.label-card ul { margin: 0; padding-left: 18px; }
-.label-card .fragile { padding: 8px 10px; border: 2px dashed #b4233a; border-radius: 4px; }
-.label-card .fragile h3 { color: #b4233a; }
-.label-card footer { display: grid; gap: 2px; margin: 0; padding-top: 8px; border-top: 1px solid #e4dfd4; }
+/* Shared buttons (mockup .u-btn) */
+.btn { font: 700 13px var(--body); padding: 8px 15px; border-radius: 999px; border: 2px solid var(--ink);
+  background: var(--ink); color: var(--bg); cursor: pointer; white-space: nowrap; }
+.btn.or { background: var(--lo); border-color: var(--lo); color: var(--on-brand); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.sm { padding: 5px 12px; font-size: 12.5px; }

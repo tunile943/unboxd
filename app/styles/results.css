@@ -1,0 +1,32 @@
+/* results: see the owning component(s) in app/components/ */
+/* The sample's shipping label stays light in both themes, like a real sticker. */
+.label-dialog { width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 0; background: transparent; overflow: auto; }
+.label-dialog::backdrop { background: rgb(10 8 14 / 0.45); }
+.label-card { position: relative; display: grid; gap: 12px; padding: 16px 18px 14px; border: 1px solid #cfc8ba; border-radius: 8px; background: #fbfaf6; color: #1d1b22; font-size: 0.85rem; line-height: 1.45; }
+.label-card h2, .label-card h3, .label-card p { margin: 0; }
+.label-close { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0; background: none; color: #5f5b68; font-size: 22px; cursor: pointer; }
+.label-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 28px 8px 0; border-bottom: 1px solid #e4dfd4; font: 500 0.65rem ui-monospace, Menlo, monospace; letter-spacing: 0.08em; color: #5f5b68; }
+.label-top b { color: #1d1b22; font-weight: 500; }
+.barcode { width: 96px; height: 20px; opacity: 0.45; background: repeating-linear-gradient(90deg, #1d1b22 0 1px, transparent 1px 3px, #1d1b22 3px 5px, transparent 5px 6px, #1d1b22 6px 7px, transparent 7px 10px); }
+.label-to { display: grid; gap: 2px; padding: 10px 12px; border: 2px solid #1d1b22; border-radius: 4px; }
+.label-to small, .label-stats dt { font: 500 0.65rem ui-monospace, Menlo, monospace; letter-spacing: 0.1em; text-transform: uppercase; color: #5f5b68; }
+.label-to h2 { font-size: 1.5rem; letter-spacing: -0.03em; }
+.label-to p, .label-card footer { color: #5f5b68; font-size: 0.8rem; }
+.label-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border: 1px solid #d8d3c8; border-radius: 4px; }
+.label-stats div { padding: 6px 10px; border-left: 1px solid #d8d3c8; }
+.label-stats div:first-child { border-left: 0; }
+.label-stats dd { margin: 0; font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.label-card section { display: grid; gap: 4px; }
+.label-card h3 { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #5f5b68; }
+.label-card h3.love { color: #00753a; }
+.label-card ul { margin: 0; padding-left: 18px; }
+.label-card .fragile { padding: 8px 10px; border: 2px dashed #b4233a; border-radius: 4px; }
+.label-card .fragile h3 { color: #b4233a; }
+.label-card footer { display: grid; gap: 2px; margin: 0; padding-top: 8px; border-top: 1px solid #e4dfd4; }
+.sample-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 24px; padding: 6px 14px; border: 1.5px dashed var(--lo); border-radius: 999px; font-size: 0.9rem; width: fit-content; max-width: 100%; }
+.info { width: 20px; height: 20px; padding: 0; border: 1.5px solid currentColor; border-radius: 50%; background: none; color: var(--lo); font: 700 11px/1 ui-sans-serif, system-ui, sans-serif; cursor: pointer; }
+
+/* Wordmark (shared; used on the landing and results headers) */
+.wm { font-family: var(--display); font-weight: 800; letter-spacing: -.035em; line-height: 1; white-space: nowrap; display: inline-flex; align-items: baseline; font-size: 23px; }
+.wm .o { color: var(--to); } .wm .g { color: var(--tg); } .wm .b { color: var(--tb); }
+.wm svg.og { width: .86em; height: .86em; align-self: center; margin: 0 .01em; }

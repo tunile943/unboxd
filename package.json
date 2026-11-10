@@ -6,7 +6,8 @@
     "dev": "concurrently -n next,api -c yellow,cyan \"next dev\" \"npm run dev:api\"",
     "dev:api": ".venv/bin/uvicorn api.index:app --reload --port 8000",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "jszip": "^3.10.2",
@@ -15,6 +16,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

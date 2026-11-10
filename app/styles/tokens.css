@@ -1,0 +1,48 @@
+/* Design C ("Two Boxes") tokens, from the mockup (https://claude.ai/artifact/AEaaQs6h7j7o4ThJ6opZA7).
+   Bright brand colours are for fills, borders and the logo; in light mode, brand-coloured text uses the
+   deep variants (--to/--tg/--tb), which pass AA. Labels on brand fills use dark ink (--on-brand). */
+:root {
+  --bg: #f6f5f9; --surface: #ffffff; --ink: #1d1b22; --mute: #5f5b68; --line: #dcd9e3;
+  --lo: #ff8000; --lg: #00e054; --lb: #40bcf4;          /* fills: orange, green (Boxd In), blue (Boxd Out) */
+  --to: #b34f00; --tg: #00753a; --tb: #0a6b94;          /* text variants */
+  --gw: #e3f8ec; --bw: #e2f3fc; --ow: #fff0e0;          /* washes */
+  --on-brand: #1d1b22; --red: #b4233a; --redw: #fde8eb;
+  --oni-g: #00e054; --oni-b: #40bcf4;                    /* mode labels on the selected (ink) tab */
+  /* kraft box */
+  --k-face: #efc290; --k-edge: #c98a55; --k-lid: #e9b67f; --k-floor: #b5f4cc; --k-wall: #6ee29e;
+  /* Flap-o logo faces (fixed in both themes) */
+  --i-l: #f0c08e; --i-r: #d99558; --i-ffl: #f9d6ad; --i-ffr: #e6a56b; --i-floor: #b5f4cc; --i-wall: #6ee29e; --i-wall2: #4fd488;
+  --lgap: var(--bg);
+  --po1: #6b2a3a; --po2: #2f4a5c; --po3: #5a4a2a; --po4: #3b2f5c; --po5: #2a5a4c; --po6: #5c3a2a; --po-ink: #f7f3ee;
+  --display: var(--font-display), system-ui, sans-serif;
+  --body: var(--font-body), system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16151b; --surface: #211f27; --ink: #f1eff5; --mute: #a7a3b0; --line: #34313c;
+    --to: #ff8000; --tg: #00e054; --tb: #40bcf4;
+    --gw: #0f2e1d; --bw: #0e2836; --ow: #33210d; --on-brand: #16151b; --red: #ff7a8a; --redw: #3a1820;
+    --oni-g: #00753a; --oni-b: #0a6b94;
+    --k-face: #6b4c30; --k-edge: #8e6844; --k-lid: #7a5737; --k-floor: #8eebb5; --k-wall: #4fcf85;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16151b; --surface: #211f27; --ink: #f1eff5; --mute: #a7a3b0; --line: #34313c;
+  --to: #ff8000; --tg: #00e054; --tb: #40bcf4;
+  --gw: #0f2e1d; --bw: #0e2836; --ow: #33210d; --on-brand: #16151b; --red: #ff7a8a; --redw: #3a1820;
+  --oni-g: #00753a; --oni-b: #0a6b94;
+  --k-face: #6b4c30; --k-edge: #8e6844; --k-lid: #7a5737; --k-floor: #8eebb5; --k-wall: #4fcf85;
+  color-scheme: dark;
+}
+
+/* Reduce motion: Settings sets data-motion="reduce" (On) or "full" (Off); System follows the OS. */
+[data-motion="reduce"] *, [data-motion="reduce"] *::before, [data-motion="reduce"] *::after {
+  animation: none !important; transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) *, :root:not([data-motion="full"]) *::before, :root:not([data-motion="full"]) *::after {
+    animation: none !important; transition: none !important;
+  }
+}
