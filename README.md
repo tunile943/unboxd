@@ -5,6 +5,8 @@ A personal, non-commercial Letterboxd recommender. Upload your Letterboxd export
 - **Boxd In**: comfort picks, more of what you already love.
 - **Boxd Out**: highly rated films beyond the genres and styles you've rated.
 
+**Try it:** [tryunboxd.vercel.app](https://tryunboxd.vercel.app). No export? Use "Try with sample data".
+
 Data comes from your own export (Settings → Import & Export → Export Your Data) plus TMDB metadata.
 
 ## Architecture
