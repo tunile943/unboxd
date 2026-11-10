@@ -6,9 +6,7 @@ from conftest import BOXD_IN_FIXTURES, FakeTMDB, films, movie, rec
 from test_quality import in_collection
 import pandas as pd
 
-from unboxd.boxd_in import keyword_only, recommend, seed_credibility, shared_keywords
-from unboxd.features import build_facets
-from unboxd.profile import build_profile
+from unboxd.boxd_in import keyword_only, recommend, seed_credibility
 from unboxd.config import RecommendConfig
 from unboxd.evaluate import leave_one_out
 
@@ -119,14 +117,24 @@ def test_unreliable_seed_is_discounted():
 
 
 def test_keyword_only():
-    c = pd.DataFrame({"because": [["Heat"], [], [], []], "via_crew": [[None], [None], [[42]], [None, [42]]]})
+    c = pd.DataFrame({"because": [["Heat"], [], [], []], "via_crew": [[None], [None], [42], [None, 42]]})
     assert keyword_only(c).tolist() == [False, True, False, False]
 
 
-def test_shared_keywords_counts_liked_keywords():
-    details = {("movie", 1): movie(keywords=["heist", "los angeles"]), ("movie", 2): movie(keywords=["explosion"]),
-               ("movie", 10): movie(keywords=["heist", "los angeles", "explosion"]),
-               ("movie", 11): movie(keywords=["heist", "space"])}
-    facets = build_facets(details)
-    profile = build_profile({("movie", 1): 1.0, ("movie", 2): -0.5}, facets)
-    assert shared_keywords(profile, facets, [("movie", 10), ("movie", 11)]).tolist() == [2, 1]
+
+@pytest.mark.parametrize("found_by, kept", [("keyword", False), ("keyword+seed", True), ("director", True)])
+def test_thin_keyword_only_finds_are_dropped(found_by, kept):
+    df, client = recommend_setup()
+    cfg = replace(ALL_SEEDS, discover_keywords=int("keyword" in found_by), discover_people=int(found_by == "director"),
+                  min_votes=1)
+    thin = rec(77, votes=400)
+    for key in list(client.responses):
+        if key.startswith("disc|"):
+            del client.responses[key]
+    client.responses["md|77"] = movie("Wes Anderson", ["Comedy"], ["quirky"])
+    if found_by == "keyword+seed":
+        client.responses["rec|1"] = client.responses["rec|1"] + [thin]
+    orig = client.discover
+    client.discover = lambda **f: [thin] + orig(**f)
+    assert 77 in set(recommend(df, client, replace(cfg, discover_min_votes=0), k=10)["tmdb_id"])  # found at all
+    assert (77 in set(recommend(df, client, cfg, k=10)["tmdb_id"])) == kept

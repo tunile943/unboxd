@@ -58,9 +58,3 @@ def test_meta_keywords_are_not_themes():
     from unboxd.features import facet_tokens
     tokens = facet_tokens(movie(keywords=["heist", "aftercreditsstinger", "woman director"]), "movie")
     assert tokens["theme"] == ["kw:heist"]
-
-
-def test_build_facets_can_drop_tokens():
-    details = {("movie", 1): movie(genres=["Drama"], year=2015), ("movie", 2): movie(genres=["Drama"], year=1995)}
-    assert build_facets(details).vocab["form"] == ["decade:1990s", "decade:2010s", "genre:Drama"]
-    assert build_facets(details, ("decade:",)).vocab["form"] == ["genre:Drama"]

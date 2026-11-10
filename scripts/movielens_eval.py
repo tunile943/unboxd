@@ -31,9 +31,6 @@ IN_CONFIGS = {
     "now": IN,
     "form 0.10": replace(IN, facet_weights=FORM(0.10)),
     "form 0.05": replace(IN, facet_weights=FORM(0.05)),
-    "no decade": replace(IN, form_decade=False),
-    "form 0.10, no decade": replace(IN, facet_weights=FORM(0.10), form_decade=False),
-    "keyword picks share 2 keywords": replace(IN, min_shared_keywords=2),
     "keyword picks: no vote floor": replace(IN, discover_min_votes=0),
 }
 OUT_CONFIGS = {
