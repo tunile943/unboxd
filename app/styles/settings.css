@@ -22,6 +22,10 @@
   font-size: 22px; line-height: 1; cursor: pointer; padding: 0;
 }
 .set-pop fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 6px; }
+.set-field { display: grid; gap: 6px; }
+.set-field label { font-weight: 700; font-size: 13.5px; }
+.set-select { font: 600 13.5px var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px; }
+.set-select:focus-visible { outline: 2px solid var(--to); outline-offset: 1px; }
 .set-pop legend { font-weight: 700; font-size: 13.5px; padding: 0; margin-bottom: 6px; }
 .seg {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; padding: 3px;
@@ -51,4 +55,5 @@
   .set-pop::before { content: ""; justify-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
   .set-x { width: 44px; height: 44px; }
   .seg span { min-height: 44px; }
+  .set-select { min-height: 44px; }
 }

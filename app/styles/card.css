@@ -1,0 +1,73 @@
+/* Pick cards: quick facts, action row (trailer, where to watch, details), the details body and the desktop drawer. */
+.u-card .u-facts, .u-details .u-facts { font: 500 11px var(--mono); letter-spacing: .03em; text-transform: uppercase; color: var(--mute); margin-top: 4px; }
+.u-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.u-act, .u-avail {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 700 12.5px var(--body); text-decoration: none;
+}
+.u-act { cursor: pointer; }
+.u-act.play { background: var(--lo); border-color: var(--lo); color: var(--on-brand); }
+.u-act.more { margin-left: auto; }
+.u-act:focus-visible, .u-avail:focus-visible, .u-trailer:focus-visible, .u-offers a:focus-visible, .u-x:focus-visible {
+  outline: 2px solid var(--to); outline-offset: 2px;
+}
+.u-avail { padding-left: 6px; gap: 4px; }
+.u-avail.none { padding-left: 12px; color: var(--mute); font-weight: 600; }
+.u-avail.loading { width: 72px; background: var(--line); opacity: .6; animation: u-pulse 1.2s ease-in-out infinite alternate; }
+@keyframes u-pulse { to { opacity: .25; } }
+.u-plogo {
+  width: 22px; height: 22px; border-radius: 6px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--line); color: var(--ink); font: 800 11px var(--display); object-fit: cover;
+}
+.u-inline { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 12px; }
+
+.u-details { display: flex; flex-direction: column; gap: 12px; }
+.u-trailer { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 16 / 9;
+  border-radius: 10px; overflow: hidden; background: #111015; border: 0; padding: 0; }
+.u-trailer iframe { width: 100%; height: 100%; border: 0; display: block; }
+.u-trailer.facade { cursor: pointer; }
+.u-trailer.facade::before { content: ""; position: absolute; inset: -24px; background: center / cover var(--bgimg, none); filter: blur(14px) brightness(.5); }
+.u-trailer .pb { position: relative; width: 60px; height: 60px; border-radius: 50%; background: var(--lo); color: var(--on-brand);
+  display: flex; align-items: center; justify-content: center; }
+.u-trailer small { position: absolute; left: 10px; bottom: 8px; font: 500 11px var(--mono); color: #f1eff5; background: #16151bcc;
+  padding: 3px 8px; border-radius: 6px; }
+.u-details .u-syn { font-size: 14px; line-height: 1.55; color: var(--ink); margin: 0; }
+.u-credits { display: grid; gap: 4px; margin: 0; }
+.u-credits div { display: flex; gap: 10px; align-items: baseline; }
+.u-credits dt, .u-where h4, .u-olabel { font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--mute); }
+.u-credits dt { width: 64px; flex: none; }
+.u-credits dd { margin: 0; font-weight: 700; font-size: 13px; }
+.u-where { display: grid; gap: 8px; }
+.u-where h4 { margin: 0; }
+.u-offers { display: flex; gap: 8px; align-items: flex-start; }
+.u-olabel { width: 64px; flex: none; padding-top: 10px; }
+.u-offers ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.u-offers a, .u-offers span:has(> .u-plogo) { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px 4px 4px; border-radius: 999px;
+  background: var(--bg); border: 1px solid var(--line); color: var(--ink); text-decoration: none; font: 700 12.5px var(--body); }
+.u-details .fine { font-size: 12px; color: var(--mute); margin: 0; }
+.u-links { display: flex; gap: 16px; margin: 0; font-weight: 700; font-size: 13px; }
+.u-links a { color: var(--tb); }
+
+.u-drawer {
+  position: fixed; inset: 0 0 0 auto; margin: 0; width: min(480px, 92vw); height: 100dvh; max-height: none; max-width: none;
+  padding: 0; border: 0; border-left: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  box-shadow: -24px 0 48px rgb(0 0 0 / .35); overflow-y: auto; overscroll-behavior: contain;
+}
+.u-drawer[open] { animation: u-slide .22s ease-out; }
+@keyframes u-slide { from { transform: translateX(40px); opacity: 0; } }
+.u-drawer::backdrop { background: rgb(11 10 14 / .6); }
+.u-drawer-in { min-height: 100%; box-sizing: border-box; padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 12px; }
+.u-drawer header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.u-drawer h2 { margin: 0; font: 800 26px/1.1 var(--display); }
+.u-drawer h2 span { font: 400 15px var(--body); color: var(--mute); }
+.u-x { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--ink);
+  font-size: 22px; line-height: 1; cursor: pointer; }
+.u-why { margin: 0; font-size: 13.5px; font-weight: 700; color: var(--tg); }
+
+@media (max-width: 640px) {
+  .u-act, .u-avail { min-height: 44px; }
+  .u-offers { flex-direction: column; gap: 6px; }
+  .u-olabel { padding-top: 0; }
+  .u-offers a { min-height: 44px; }
+  .u-links a { display: inline-flex; align-items: center; min-height: 44px; }
+}

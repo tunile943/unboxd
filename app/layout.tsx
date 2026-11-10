@@ -5,6 +5,7 @@ import "./styles/tokens.css";
 import "./globals.css";
 import "./styles/landing.css";
 import "./styles/results.css";
+import "./styles/card.css";
 import "./styles/settings.css";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["500", "800"], variable: "--font-display" });

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from unboxd import boxd_in, boxd_out
 from unboxd.config import CONFIG
+from unboxd.film_info import extras as film_extras
 from unboxd.ingest import EXPORT_FILES, load_csvs
 from unboxd.resolve import resolve_films
 from unboxd.tmdb import TMDBAuthError, TMDBClient
@@ -70,6 +71,16 @@ class RecommendRequest(BaseModel):
     films: list[Film]
     k: int = Field(default=20, ge=1, le=50)
     exclude: list[int] = Field(default=[], max_length=100, description="TMDB ids to skip, e.g. Boxd In picks")
+
+
+class ExtrasFilm(BaseModel):
+    tmdb_id: int
+    language: str | None = Field(default=None, max_length=8)
+
+
+class ExtrasRequest(BaseModel):
+    films: list[ExtrasFilm] = Field(max_length=50)
+    region: str = Field(default="US", pattern="^[A-Z]{2}$")
 
 
 def _clean(v: Any) -> Any:
@@ -138,3 +149,16 @@ def recommend(req: RecommendRequest) -> dict:
     except TMDBAuthError as e:
         raise HTTPException(502, str(e)) from e
     return {"picks": records(picks)}
+
+
+@app.post("/api/extras")
+def extras(req: ExtrasRequest) -> dict:
+    """Trailer and where-to-watch (one region) per pick; fetched after the picks show."""
+    if not CONFIG.tmdb_token:
+        raise HTTPException(503, "TMDB token not configured")
+    try:
+        found = film_extras([(f.tmdb_id, f.language) for f in req.films], req.region, tmdb_client(),
+                            CONFIG.recommend.workers)
+    except TMDBAuthError as e:
+        raise HTTPException(502, str(e)) from e
+    return {"extras": {str(k): v for k, v in found.items()}}

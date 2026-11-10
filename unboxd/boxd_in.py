@@ -14,12 +14,13 @@ from .candidates import (drop_genres, gather_candidates, name_ids, profile_input
                          verify_crew, watchlist_ids)
 from .config import RecommendConfig
 from .diversify import mmr
+from .film_info import CARD_COLUMNS, with_card_info
 from .features import FacetMatrix, Key, build_facets, fetch_details, item_similarity
 from .profile import TasteProfile, build_profile, similarity
 from .quality import bayesian_rating, franchise_opinions, franchise_penalty, prior_strength
 
 PICK_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "score", "strength", "similarity",
-                "reason", "on_watchlist"]
+                "reason", "on_watchlist", "vote_average", "vote_count", *CARD_COLUMNS]
 
 
 def discover_queries(profile: TasteProfile, facets: FacetMatrix, details: dict[Key, dict],
@@ -84,6 +85,6 @@ def recommend(films: pd.DataFrame, client, cfg: RecommendConfig | None = None,
     pool_keys = [("movie", int(i)) for i in pool["tmdb_id"]]
     order = mmr(pool["score"].to_numpy(), item_similarity(facets, pool_keys, cfg.facet_weights), k,
                 mmr_lambda if mmr_lambda is not None else cfg.mmr_lambda)
-    picks = pool.iloc[order]
+    picks = with_card_info(pool.iloc[order], details)
     return picks.assign(reason=[_reason(b, v) for b, v in zip(picks["because"], picks["via"])],
                         on_watchlist=picks["tmdb_id"].isin(watchlist_ids(films)))[PICK_COLUMNS].reset_index(drop=True)

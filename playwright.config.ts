@@ -8,7 +8,7 @@ export default defineConfig({
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
-  use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
+  use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure", locale: "en-US" },
   projects: [
     { name: "desktop", use: { browserName: "chromium", viewport: { width: 1280, height: 800 } } },
     { name: "phone", use: { browserName: "chromium", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },

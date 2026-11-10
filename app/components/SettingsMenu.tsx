@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { type DisplayMode, type MotionMode, type Settings, useSettings } from "../settings";
+import { regionName } from "@/lib/regions";
+import { type DisplayMode, type MotionMode, useSettings } from "../settings";
 
-const GROUPS: { key: keyof Settings; legend: string; options: [DisplayMode | MotionMode, string][] }[] = [
+const REGIONS = ["US", "CA", "GB", "IE", "AU", "NZ", "IN", "DE", "AT", "CH", "FR", "BE", "NL", "ES", "IT", "PT", "SE", "NO",
+  "DK", "FI", "PL", "BR", "MX", "AR", "JP", "KR", "SG", "ZA"];
+
+const GROUPS: { key: "display" | "motion"; legend: string; options: [DisplayMode | MotionMode, string][] }[] = [
   { key: "display", legend: "Display mode", options: [["system", "System"], ["light", "Light"], ["dark", "Dark"]] },
   { key: "motion", legend: "Reduce motion", options: [["system", "System"], ["on", "On"], ["off", "Off"]] },
 ];
@@ -41,7 +45,7 @@ export function SettingsMenu() {
       e.preventDefault();
       close();
     } else if (e.key === "Tab" && pop.current) {
-      const f = [...pop.current.querySelectorAll<HTMLElement>("button, input:checked")];
+      const f = [...pop.current.querySelectorAll<HTMLElement>("button, input:checked, select")];
       const [first, last] = [f[0], f[f.length - 1]];
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
@@ -88,6 +92,16 @@ export function SettingsMenu() {
                 )}
               </fieldset>
             ))}
+            <div className="set-field">
+              <label htmlFor={`${id}-region`}>Watch region</label>
+              <select id={`${id}-region`} className="set-select" value={s.region}
+                      onChange={(e) => s.update({ region: e.target.value })}>
+                <option value="">Automatic ({regionName(s.detectedRegion)})</option>
+                {[...new Set([...REGIONS, s.detectedRegion, ...(s.region ? [s.region] : [])])].sort((a, b) => regionName(a).localeCompare(regionName(b)))
+                  .map((r) => <option key={r} value={r}>{regionName(r)}</option>)}
+              </select>
+              <p className="fine">Where-to-watch listings follow this region.</p>
+            </div>
             <p className="fine">Settings are saved in this browser.</p>
           </div>
         </>

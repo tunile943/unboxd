@@ -26,7 +26,9 @@ def main() -> None:
     picks_in = client.post("/api/recommend", json={"mode": "in", "films": slim}).json()["picks"]
     exclude = [p["tmdb_id"] for p in picks_in]
     picks_out = client.post("/api/recommend", json={"mode": "out", "films": slim, "exclude": exclude}).json()["picks"]
-    data = {"films": films, "resolved": resolved, "picks_in": picks_in, "picks_out": picks_out}
+    extras = client.post("/api/extras", json={"region": "US", "films": [
+        {"tmdb_id": p["tmdb_id"], "language": p["language"]} for p in picks_in + picks_out]}).json()["extras"]
+    data = {"films": films, "resolved": resolved, "picks_in": picks_in, "picks_out": picks_out, "extras_us": extras}
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n")
     print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
 

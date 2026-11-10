@@ -80,6 +80,7 @@ def test_recommend_in(monkeypatch):
     assert resp.status_code == 200
     picks = resp.json()["picks"]
     assert 0 < len(picks) <= 3 and {"tmdb_id", "title", "reason", "on_watchlist", "poster_path"} <= set(picks[0])
+    assert isinstance(picks[0]["genres"], list) and "director" in picks[0] and "vote_average" in picks[0]
 
 
 def test_recommend_out(monkeypatch):
@@ -93,6 +94,7 @@ def test_recommend_out(monkeypatch):
     assert resp.status_code == 200
     picks = resp.json()["picks"]
     assert picks[0]["tmdb_id"] == 100 and {"reason", "novelty", "bridge", "on_watchlist"} <= set(picks[0])
+    assert isinstance(picks[0]["cast"], list) and "language" in picks[0]
 
 
 @pytest.mark.parametrize("mode", ["in", "out"])
@@ -100,3 +102,22 @@ def test_recommend_without_token(monkeypatch, mode):
     import api.index as api_index
     monkeypatch.setattr(api_index, "CONFIG", replace(api_index.CONFIG, tmdb_token=""))
     assert client.post("/api/recommend", json={"mode": mode, "films": []}).status_code == 503
+
+
+def test_extras(monkeypatch):
+    import api.index as api_index
+    fake = FakeTMDB({"vid|7": [{"site": "YouTube", "type": "Trailer", "key": "abc", "name": "Trailer"}],
+                     "wp|7": {"GB": {"link": "https://tmdb/7", "flatrate": [
+                         {"provider_id": 8, "provider_name": "Netflix", "logo_path": "/n.png"}]}}})
+    monkeypatch.setattr(api_index, "CONFIG", replace(api_index.CONFIG, tmdb_token="test"))
+    monkeypatch.setattr(api_index, "tmdb_client", lambda: fake)
+    resp = client.post("/api/extras", json={"films": [{"tmdb_id": 7, "language": "fr"}], "region": "GB"})
+    got = resp.json()["extras"]["7"]
+    assert got["trailer"]["key"] == "abc" and got["providers"]["stream"][0]["name"] == "Netflix"
+    assert ("vid", 7, "fr") in fake.calls
+
+
+@pytest.mark.parametrize("body", [{"films": [{"tmdb_id": i} for i in range(51)]},
+                                  {"films": [], "region": "usa"}])
+def test_extras_rejects_bad_requests(body):
+    assert client.post("/api/extras", json=body).status_code == 422

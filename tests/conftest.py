@@ -38,6 +38,14 @@ class FakeTMDB:
         self.calls.append(("md", movie_id))
         return self.responses.get(f"md|{movie_id}", {})
 
+    def videos(self, movie_id, language=None):
+        self.calls.append(("vid", movie_id, language))
+        return self.responses.get(f"vid|{movie_id}", [])
+
+    def watch_providers(self, movie_id):
+        self.calls.append(("wp", movie_id))
+        return self.responses.get(f"wp|{movie_id}", {})
+
     def recommendations(self, movie_id, page=1):
         self.calls.append(("rec", movie_id))
         return self.responses.get(f"rec|{movie_id}", [])

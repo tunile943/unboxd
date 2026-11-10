@@ -34,7 +34,7 @@ class TMDBClient:
         self.ttl = ttl_seconds
         self.cache = cache or default_cache(CONFIG.cache_path)
 
-    def get(self, path: str, **params: Any) -> dict:
+    def get(self, path: str, ttl: int | None = None, **params: Any) -> dict:
         key = path + "?" + json.dumps(params, sort_keys=True)
         cached = self.cache.get(key)
         if cached is not None:
@@ -57,7 +57,7 @@ class TMDBClient:
             else:
                 resp.raise_for_status()
                 data = resp.json()
-            self.cache.set(key, data, self.ttl)
+            self.cache.set(key, data, ttl or self.ttl)
             return data
         resp.raise_for_status()
         return {}
@@ -84,6 +84,14 @@ class TMDBClient:
     def details(self, movie_id: int) -> dict:
         """Details + credits + keywords in one call."""
         return self.get(f"/movie/{movie_id}", append_to_response="credits,keywords")
+
+    def videos(self, movie_id: int, language: str | None = None) -> list[dict]:
+        langs = ",".join(dict.fromkeys(["en", language or "en", "null"]))
+        return self.get(f"/movie/{movie_id}/videos", include_video_language=langs).get("results", [])
+
+    def watch_providers(self, movie_id: int) -> dict:
+        """{region: offers} for every region (JustWatch data; credit it). Cached a day: offers change."""
+        return self.get(f"/movie/{movie_id}/watch/providers", ttl=24 * 3600).get("results", {})
 
     def recommendations(self, movie_id: int, page: int = 1) -> list[dict]:
         return self.get(f"/movie/{movie_id}/recommendations", page=page).get("results", [])

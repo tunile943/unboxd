@@ -120,7 +120,9 @@ test("on desktop each column scrolls on its own", async ({ page }, info) => {
   const boxdIn = page.getByRole("region", { name: "Boxd In" });
   const boxdOut = page.getByRole("region", { name: "Boxd Out" });
   await boxdOut.locator(".u-card").first().waitFor();
-  await boxdIn.hover();
+  // Not hover(): mid pop-in the column is briefly taller, and hover() would scroll the page to fit it.
+  const box = (await boxdIn.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 150);
   await page.mouse.wheel(0, 600);
   await expect.poll(() => boxdIn.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
   expect(await boxdOut.evaluate((el) => el.scrollTop)).toBe(0);

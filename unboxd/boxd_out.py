@@ -22,12 +22,13 @@ from .candidates import (drop_genres, gather_candidates, name_ids, profile_input
                          watchlist_ids)
 from .config import ExploreConfig, RecommendConfig
 from .diversify import mmr
+from .film_info import CARD_COLUMNS, with_card_info
 from .features import FacetMatrix, Key, build_facets, facet_tokens, fetch_details, item_similarity
 from .profile import TasteProfile, build_profile, similarity
 from .quality import bayesian_rating, franchise_opinions, franchise_penalty, prior_strength
 
 PICK_COLUMNS = ["tmdb_id", "title", "year", "poster_path", "score", "quality", "novelty", "bridge",
-                "reason", "new_label", "bridge_label", "on_watchlist"]
+                "reason", "new_label", "bridge_label", "on_watchlist", "vote_average", "vote_count", *CARD_COLUMNS]
 GENRE_IDS = {"Action": 28, "Adventure": 12, "Animation": 16, "Comedy": 35, "Crime": 80, "Documentary": 99,
              "Drama": 18, "Family": 10751, "Fantasy": 14, "History": 36, "Horror": 27, "Music": 10402,
              "Mystery": 9648, "Romance": 10749, "Science Fiction": 878, "Thriller": 53, "War": 10752,
@@ -173,7 +174,7 @@ def scored_pool(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, r
     cands["reason"] = [_reason(n, counts, b) for n, b in zip(novel, bridges)]
     cands["new_label"] = [_label(n) for n in novel]
     cands["bridge_label"] = [_label(b) for b in bridges]
-    return cands.reset_index(drop=True), facets
+    return with_card_info(cands, details).reset_index(drop=True), facets
 
 
 def recommend(films: pd.DataFrame, client, cfg: ExploreConfig | None = None, rcfg: RecommendConfig | None = None,

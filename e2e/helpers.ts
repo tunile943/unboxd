@@ -10,7 +10,7 @@ const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQ
 export type MockOptions = {
   films?: Film[]; // what /api/films returns (default: the sample diary)
   delayMs?: number; // per API call, to make loading states observable
-  fail?: "films" | "resolve" | "recommend"; // answer that endpoint with a 500
+  fail?: "films" | "resolve" | "recommend" | "extras"; // answer that endpoint with a 500
 };
 
 /** Serve /api/* from the recorded sample responses. /api/resolve matches by name and year, so any subset works. */
@@ -29,6 +29,17 @@ export async function mockApi(page: Page, opts: MockOptions = {}) {
       return route.fulfill({
         json: { films: body.films.map((f: Film) => resolved.get(`${f.name}|${f.year}`) ?? { ...f, match_confidence: "none" }) },
       });
+    if (endpoint === "extras") {
+      // Recorded for the US; any other region has the same trailers and nothing to watch.
+      const us = fixture.extras_us as Record<string, { trailer: unknown; providers: unknown }>;
+      const none = { link: null, stream: [], rent: [], buy: [] };
+      return route.fulfill({
+        json: { extras: Object.fromEntries(body.films.map((f: { tmdb_id: number }) => {
+          const e = us[f.tmdb_id] ?? { trailer: null, providers: none };
+          return [f.tmdb_id, body.region === "US" ? e : { ...e, providers: none }];
+        })) },
+      });
+    }
     if (endpoint === "recommend")
       return route.fulfill({ json: { picks: body.mode === "in" ? fixture.picks_in : fixture.picks_out } });
     return route.fulfill({ status: 404 });

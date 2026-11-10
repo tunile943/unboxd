@@ -44,7 +44,24 @@ export type Pick = {
   // Boxd Out only: what's new for you ("Korean", "War", "1960s") and the loved person or theme bridging to it.
   new_label?: string | null;
   bridge_label?: string | null;
+  // Card facts, from the details the ranking already fetched.
+  runtime: number | null;
+  genres: string[];
+  director: string | null;
+  cast: string[];
+  overview: string | null;
+  language: string | null;
+  vote_average: number;
+  vote_count: number;
 };
+
+export type Offer = { name: string; logo: string | null };
+export type Extras = {
+  trailer: { key: string; name: string } | null;
+  providers: { link: string | null; stream: Offer[]; rent: Offer[]; buy: Offer[] };
+};
+
+export const EXTRAS_BATCH = 50;
 
 export const RESOLVE_BATCH = 100;
 
@@ -120,4 +137,10 @@ export async function resolveFilms(
 export async function recommend(films: Film[], mode: "in" | "out", exclude: number[] = []): Promise<Pick[]> {
   const slim = films.map(({ candidates, ...f }) => f); // alternatives aren't needed and bloat the request
   return (await post<{ picks: Pick[] }>("/api/recommend", { mode, films: slim, exclude })).picks;
+}
+
+/** Trailer and where-to-watch in one region for up to EXTRAS_BATCH picks, keyed by TMDB id. */
+export async function fetchExtras(picks: Pick[], region: string): Promise<Record<string, Extras>> {
+  const films = picks.map((p) => ({ tmdb_id: p.tmdb_id, language: p.language }));
+  return (await post<{ extras: Record<string, Extras> }>("/api/extras", { films, region })).extras;
 }

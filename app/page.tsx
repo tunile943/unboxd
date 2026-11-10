@@ -7,10 +7,14 @@ import { LandingBox } from "./components/LandingBox";
 import { PickColumns } from "./components/PickColumns";
 import { ResultsHeader } from "./components/ResultsHeader";
 import { PANEL_ID, type Tab, Tabs } from "./components/Tabs";
+import { useSettings } from "./settings";
+import { useExtras } from "./useExtras";
 import { useUnboxd } from "./useUnboxd";
 
 export default function Home() {
   const u = useUnboxd();
+  const { watchRegion } = useSettings();
+  const extras = useExtras(u.picksIn, u.picksOut, watchRegion);
   const [tab, setTab] = useState<Tab>("in");
   const revealed = !!(u.phase === "revealed" && u.films && u.picksIn);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -36,7 +40,8 @@ export default function Home() {
             {tab === "data" ? (
               <DataTable films={u.films!} />
             ) : (
-              <PickColumns picksIn={u.picksIn!} picksOut={u.picksOut} outError={u.outError} tab={tab} />
+              <PickColumns picksIn={u.picksIn!} picksOut={u.picksOut} outError={u.outError} tab={tab}
+                           extras={extras} region={watchRegion} />
             )}
           </div>
         </div>
