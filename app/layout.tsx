@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, IBM_Plex_Mono, Karla } from "next/font/google";
 import { SettingsProvider, THEME_SCRIPT } from "./settings";
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <SettingsProvider>{children}</SettingsProvider>
+        <Analytics />
       </body>
     </html>
   );
