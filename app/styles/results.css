@@ -119,7 +119,13 @@ img.poster { padding: 0; display: block; }
 }
 
 /* Footer */
-.u-foot { margin-top: auto; border-top: 1px solid var(--line); padding-block: 12px; font-size: 10.5px; color: var(--mute); }
+/* Links beside the attribution when it fits; on its own line above it when not. */
+.u-foot { margin-top: auto; border-top: 1px solid var(--line); padding-block: 8px; font-size: 10.5px; color: var(--mute);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 20px; }
+.u-foot nav { display: flex; gap: 0 16px; }
+.u-foot nav a { display: inline-flex; align-items: center; min-height: 24px; font-size: 12px; font-weight: 700; color: var(--ink); }
+.u-foot p { flex: 1 1 400px; }
+@media (max-width: 640px) { .u-foot nav a { min-height: 44px; } }
 
 /* The sample's shipping label stays light in both themes, like a real sticker. */
 .u-persona-dlg { border: 0; padding: 0; background: transparent; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; color-scheme: light; }

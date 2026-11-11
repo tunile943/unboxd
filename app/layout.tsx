@@ -8,6 +8,7 @@ import "./styles/landing.css";
 import "./styles/results.css";
 import "./styles/card.css";
 import "./styles/settings.css";
+import "./styles/info.css";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["500", "800"], variable: "--font-display" });
 const body = Karla({ subsets: ["latin"], weight: ["400", "600", "700"], variable: "--font-body" });

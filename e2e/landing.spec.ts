@@ -39,8 +39,8 @@ test("landing shows both entry points and the privacy footnote", async ({ page }
   await expect(landing.getByRole("heading", { name: "Two boxes of films, carefully packed from your ratings." })).toBeVisible();
   await expect(landing.getByText("Choose ZIP")).toBeVisible();
   await expect(landing.getByRole("button", { name: "Try with sample data" })).toBeVisible();
-  await expect(landing.getByText("Your export isn't saved.")).toBeVisible();
-  await expect(landing.getByText(/then discarded/)).toBeVisible();
+  await expect(landing.getByText("Saved only in this browser.")).toBeVisible();
+  await expect(landing.getByText(/discarded after each request/)).toBeVisible();
 });
 
 test("the sample shows progress on the label, then results", async ({ page }) => {

@@ -1,13 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../settings";
 import type { Unboxd } from "../useUnboxd";
 import { Wordmark } from "./Logo";
 import { SettingsMenu } from "./SettingsMenu";
-
-const PRIVACY =
-  "Unboxd reads your ZIP in this browser and doesn't save it. Its five film lists (watched, diary, ratings, likes, watchlist) are sent to our server to match films on TMDB and pick recommendations, then discarded. Only TMDB lookups are cached, with nothing that ties them to you.";
 
 // One shake per finished batch: a left-right, b right-left, c double shiver, d hop with a tilt.
 const JIGS = [["a", ".5s"], ["b", ".5s"], ["c", ".45s"], ["d", ".55s"]] as const;
@@ -209,9 +207,12 @@ export function LandingBox({ u }: { u: Unboxd }) {
             )}
             <div className="priv">
               <div>
-                <span>Your export isn&apos;t saved.<sup>*</sup></span>
+                <span>Saved only in this browser.<sup>*</sup></span>
               </div>
-              <p id="priv-note"><sup>*</sup> {PRIVACY}</p>
+              <p id="priv-note">
+                <sup>*</sup> Your films stay in this browser. To match them and pick recommendations, they&apos;re sent to our
+                server and discarded after each request. <Link href="/privacy">Privacy</Link> · <Link href="/how-it-works">How it works</Link>
+              </p>
             </div>
           </div>
         </div>
