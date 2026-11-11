@@ -152,7 +152,10 @@ export function LandingBox({ u }: { u: Unboxd }) {
           <div className="lid" aria-hidden="true"><span className="hold" /></div>
           <div className="ship">
             <div className="ship-top" aria-hidden="true"><i /><b /></div>
-            <p className="sr-only" role="status" aria-live="polite">{busy ? title : ""}</p>
+            <p className={busy || u.cleared === null ? "sr-only" : "cleared"} role="status" aria-live="polite">
+              {busy ? title : u.cleared !== null
+                ? `Browser data cleared${u.cleared.elsewhere ? " in another tab" : ""}. ${u.cleared.films} films and their matches were removed from this browser.` : ""}
+            </p>
             {busy ? (
               <div className="prog">
                 <h2>{title}</h2>

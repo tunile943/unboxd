@@ -132,6 +132,7 @@ def resolve(req: ResolveRequest) -> dict:
         out = resolve_films(_frame(req.films), tmdb_client(), CONFIG.match)
     except TMDBAuthError as e:
         raise HTTPException(502, str(e)) from e
+    out["last_watched"] = out["last_watched"].dt.strftime("%Y-%m-%d")  # as /api/films sends it
     return {"films": records(out)}
 
 

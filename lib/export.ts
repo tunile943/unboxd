@@ -113,8 +113,42 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return resp.json();
 }
 
+// The only columns the server reads; the rest (Letterboxd URIs, logged dates, tags) never leave the browser.
+const KEEP = new Set(["Name", "Year", "Rating", "Rewatch", "Watched Date"]);
+
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [], cell = "", quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') cell += text[++i];
+      else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+const csvCell = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v);
+
+/** Keep only the columns in KEEP. */
+export function trimCsv(text: string): string {
+  const [head, ...rows] = parseCsv(text.replace(/^\uFEFF/, ""));
+  if (!head) return "";
+  const keep = head.flatMap((h, i) => (KEEP.has(h.trim()) ? [i] : []));
+  return [head, ...rows].map((r) => keep.map((i) => csvCell(r[i] ?? "")).join(",")).join("\n") + "\n";
+}
+
 export async function parseFilms(files: Record<string, string>): Promise<Film[]> {
-  return (await post<{ films: Film[] }>("/api/films", { files })).films;
+  const trimmed = Object.fromEntries(Object.entries(files).map(([f, text]) => [f, trimCsv(text)]));
+  return (await post<{ films: Film[] }>("/api/films", { files: trimmed })).films;
 }
 
 /** Match films to TMDB in batches (each call must finish within Vercel's time limit). */

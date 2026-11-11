@@ -48,7 +48,7 @@ def api_with_fake_tmdb(monkeypatch):
 
 
 def test_resolve_returns_matches(api_with_fake_tmdb):
-    films = [{"name": "Heat", "year": 1995, "rating": 4.0},
+    films = [{"name": "Heat", "year": 1995, "rating": 4.0, "last_watched": "2024-05-05"},
              {"name": "Zzqx Nonexistent Film", "year": 2020},
              {"name": "Crash", "year": 2004}]
     resp = client.post("/api/resolve", json={"films": films})
@@ -57,6 +57,7 @@ def test_resolve_returns_matches(api_with_fake_tmdb):
     assert (heat["tmdb_id"], heat["match_confidence"], heat["match_reason"]) == (949, "high", None)
     assert heat["media_type"] == "movie" and missing["media_type"] is None
     assert heat["rating"] == 4.0 and isinstance(heat["candidates"], list)
+    assert heat["last_watched"] == "2024-05-05" and missing["last_watched"] is None  # same format as /api/films
     assert (missing["tmdb_id"], missing["match_confidence"], missing["tmdb_year"]) == (None, "none", None)
     assert (crash["tmdb_id"], crash["tmdb_year"], crash["match_reason"]) == (1640, 2005, "Year differs by 1")
     assert {"id", "title", "year", "poster_path"} <= set(crash["candidates"][0])

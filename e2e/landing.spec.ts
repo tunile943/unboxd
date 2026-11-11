@@ -11,6 +11,7 @@ type Seen = { jigs: string[]; classes: string[]; statuses: string[] };
 
 /** Record each write to the box's data-jig and class, and each status text, from before the run starts. */
 async function watchBox(page: Page) {
+  await page.getByTestId("box").waitFor(); // after the check for saved data
   await page.evaluate(() => {
     const w = window as unknown as Seen;
     Object.assign(w, { jigs: [], classes: [], statuses: [] });
