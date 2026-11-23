@@ -53,7 +53,7 @@ test("a pick on your watchlist carries the badge", async ({ page }, info) => {
   await expect(badged).toHaveCount((inPick ? SAMPLE.picks_in : SAMPLE.picks_out).filter((p) => p.on_watchlist).length);
 });
 
-test("the sample strip opens the shipping label and leads back to the landing", async ({ page }) => {
+test("the sample strip opens the shipping label and leads back to the landing", async ({ page }, info) => {
   await openSample(page);
   await expect(page.getByText("Sample diary", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Who is the sample diary?" }).click();
@@ -62,6 +62,12 @@ test("the sample strip opens the shipping label and leads back to the landing", 
   expect(await noSideScroll(page)).toBeLessThanOrEqual(0);
   await page.keyboard.press("Escape");
   await expect(label).toBeHidden();
+  if (!isPhone(info.project.name)) { // phones fill the screen: no backdrop to click
+    await page.getByRole("button", { name: "Who is the sample diary?" }).click();
+    await expect(label).toBeVisible();
+    await page.mouse.click(20, 20);
+    await expect(label).toBeHidden();
+  }
 
   await page.getByRole("button", { name: "Use your own export" }).click();
   await expect(page.getByTestId("landing")).toBeVisible();

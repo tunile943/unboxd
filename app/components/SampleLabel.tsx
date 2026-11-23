@@ -1,3 +1,5 @@
+import { lightDismissFallback } from "../useModal";
+
 // Who the sample diary in public/sample/ is, so testers can judge its picks. Keep in sync with the CSVs.
 export function SampleLabel({ ref }: { ref: React.Ref<HTMLDialogElement> }) {
   return (
@@ -5,7 +7,8 @@ export function SampleLabel({ ref }: { ref: React.Ref<HTMLDialogElement> }) {
       ref={ref}
       className="u-persona-dlg"
       aria-labelledby="sample-label-title"
-      onClick={(e) => e.target === e.currentTarget && e.currentTarget.close()}
+      closedby="any"
+      onClick={lightDismissFallback}
     >
       <form method="dialog">
         <button className="u-lc-x" aria-label="Close">×</button>

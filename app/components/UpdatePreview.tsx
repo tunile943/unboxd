@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import type { Film } from "@/lib/export";
 import { formatDay } from "@/lib/store";
 import { type Diff, diffSize } from "@/lib/update";
+import { useModal } from "../useModal";
 
 const SHOWN = 6;
 const named = (f: Film) => `${f.name}${f.year ? ` (${f.year})` : ""}`;
@@ -29,7 +29,8 @@ export function UpdatePreview({ preview, savedAt, returnTo, onApply, onCancel }:
   preview: { fileName: string; diff: Diff }; savedAt: string | null; returnTo: HTMLElement | null;
   onApply: () => void; onCancel: () => void;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
+  const modal = useModal(onCancel, returnTo, preview);
+  const { ref } = modal;
   const { diff } = preview;
   const changes = rows(diff);
   const addedWatched = diff.added.filter((f) => f.watched).length;
@@ -43,20 +44,13 @@ export function UpdatePreview({ preview, savedAt, returnTo, onApply, onCancel }:
     ...count(diff.removed.length, "removed", "removed"),
   ];
 
-  useEffect(() => {
-    const dlg = ref.current!;
-    if (!dlg.open) dlg.showModal();
-    return () => returnTo?.focus();
-  }, [returnTo]);
-
   const apply = () => {
     ref.current?.close();
     onApply();
   };
 
   return (
-    <dialog ref={ref} className="u-drawer u-update" aria-labelledby="update-title" onClose={onCancel}
-            onClick={(e) => e.target === e.currentTarget && e.currentTarget.close()}>
+    <dialog {...modal} className="u-drawer u-update" aria-labelledby="update-title">
       <div className="u-drawer-in">
         <header>
           <h2 id="update-title">Update from a newer export</h2>

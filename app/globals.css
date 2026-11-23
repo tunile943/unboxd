@@ -11,6 +11,16 @@ a { color: var(--to); }
 button { font: inherit; color: inherit; }
 img { max-width: 100%; }
 
+/* Modals: entry and exit transitions (each dialog sets its open and closed looks), and no page scroll behind them. */
+dialog, dialog::backdrop {
+  transition-property: opacity, translate, scale, background-color, display, overlay;
+  transition-duration: .22s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }
+
 /* A full-height column, so the footer sits at the bottom of the screen when the content is shorter. */
 .page { max-width: 1120px; margin: 0 auto; padding-block: 0 24px; min-height: 100dvh; box-sizing: border-box;
   display: flex; flex-direction: column; gap: 16px;

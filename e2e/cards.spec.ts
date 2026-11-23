@@ -96,6 +96,29 @@ test("if extras fail, cards still work without trailer or providers", async ({ p
   await expect(c.getByRole("button", { name: `Details about ${logan.title}` })).toBeVisible();
 });
 
+test("desktop: a click on the backdrop closes the drawer and focus returns", async ({ page }, info) => {
+  test.skip(isPhone(info.project.name));
+  await openSample(page);
+  const details = card(page, incendies.title).getByRole("button", { name: `Details about ${incendies.title}` });
+  await details.click();
+  const drawer = page.getByRole("dialog", { name: /Incendies/ });
+  await expect(drawer).toBeVisible();
+  await page.mouse.click(40, 400); // left of the panel
+  await expect(drawer).toHaveCount(0);
+  await expect(details).toBeFocused();
+});
+
+test("desktop: Details on another card while the drawer is closing opens that one", async ({ page }, info) => {
+  test.skip(isPhone(info.project.name));
+  await openSample(page);
+  await card(page, incendies.title).getByRole("button", { name: `Details about ${incendies.title}` }).click();
+  await expect(page.getByRole("dialog", { name: /Incendies/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await card(page, logan.title).getByRole("button", { name: `Details about ${logan.title}` }).click();
+  await page.waitForTimeout(500); // past the exit transition
+  await expect(page.getByRole("dialog", { name: new RegExp(logan.title) })).toBeVisible();
+});
+
 test("desktop: clicking blank space inside the drawer keeps it open", async ({ page }, info) => {
   test.skip(isPhone(info.project.name));
   await openSample(page, { fail: "extras" }); // no trailer or providers: a short panel

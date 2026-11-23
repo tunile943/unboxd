@@ -128,8 +128,15 @@ img.poster { padding: 0; display: block; }
 @media (max-width: 640px) { .u-foot nav a { min-height: 44px; } }
 
 /* The sample's shipping label stays light in both themes, like a real sticker. */
-.u-persona-dlg { border: 0; padding: 0; background: transparent; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; color-scheme: light; }
-.u-persona-dlg::backdrop { background: rgba(10, 8, 14, .45); }
+.u-persona-dlg { border: 0; padding: 0; background: transparent; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; color-scheme: light;
+  opacity: 0; scale: .96; }
+.u-persona-dlg[open] { opacity: 1; scale: 1; }
+.u-persona-dlg::backdrop { background-color: rgb(10 8 14 / 0); }
+.u-persona-dlg[open]::backdrop { background-color: rgb(10 8 14 / .45); }
+@starting-style {
+  .u-persona-dlg[open] { opacity: 0; scale: .96; }
+  .u-persona-dlg[open]::backdrop { background-color: rgb(10 8 14 / 0); }
+}
 .u-persona-dlg form { margin: 0; }
 .u-lc-x { position: absolute; top: 6px; right: 6px; z-index: 2; width: 36px; height: 36px; border-radius: 999px; border: 0; background: none; color: #5f5b68; font-size: 22px; line-height: 1; cursor: pointer; }
 .u-label-card { position: relative; display: grid; gap: 12px; background: #fbfaf6; color: #1d1b22; border: 1px solid #cfc8ba; border-radius: 8px; padding: 16px 18px 14px; font-family: var(--body); font-size: 13.5px; line-height: 1.45; box-shadow: 0 1px 0 rgba(40, 30, 15, .12); }
@@ -155,7 +162,9 @@ img.poster { padding: 0; display: block; }
 /* Phones: the label is a full-screen sheet that scrolls, with the close button in a sticky top bar. */
 @media (max-width: 640px) {
   .u-persona-dlg { width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; inset: 0;
-    overflow-y: auto; overscroll-behavior: contain; background: #fbfaf6; }
+    overflow-y: auto; overscroll-behavior: contain; background: #fbfaf6; scale: 1; translate: 0 32px; }
+  .u-persona-dlg[open] { translate: 0; }
+  @starting-style { .u-persona-dlg[open] { scale: 1; translate: 0 32px; } }
   .u-persona-dlg form { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; background: #fbfaf6;
     border-bottom: 1px solid #e4dfd4; padding: env(safe-area-inset-top, 0px) max(4px, env(safe-area-inset-right, 0px)) 0 0; }
   .u-lc-x { position: static; width: 44px; height: 44px; }
