@@ -107,12 +107,19 @@ test("desktop: clicking blank space inside the drawer keeps it open", async ({ p
 });
 
 test("a failed extras call is retried when the region changes back", async ({ page }) => {
-  let calls = 0;
+  let regionChanged = false;
   await mockApi(page);
-  // Registered after mockApi, so it runs first: the first extras call fails.
-  await page.route("**/api/extras", (route) => (++calls === 1 ? route.fulfill({ status: 500, body: "boom" }) : route.fallback()));
+  // Registered after mockApi, so it runs first. Logan's extras fail until the region changes: a retry when
+  // Boxd Out's list arrives must not count.
+  await page.route("**/api/extras", (route) => {
+    const body = route.request().postDataJSON();
+    if (body.region !== "US") regionChanged = true;
+    const hasLogan = body.films.some((f: { tmdb_id: number }) => f.tmdb_id === logan.tmdb_id);
+    return hasLogan && !regionChanged ? route.fulfill({ status: 500, body: "boom" }) : route.fallback();
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "Try with sample data" }).click();
+  await expect(card(page, logan.title)).toBeVisible(); // else the count below passes before the failed call lands
   await expect(card(page, logan.title).locator(".u-avail")).toHaveCount(0);
   for (const r of ["GB", ""]) {
     await page.getByRole("button", { name: "Settings" }).click();
