@@ -49,6 +49,17 @@ test("System removes the theme attribute", async ({ page }) => {
   expect(await attr(page, "data-theme")).toBeNull();
 });
 
+const BG = { light: "rgb(246, 245, 249)", dark: "rgb(22, 21, 27)" };
+for (const [os, display, palette] of [["dark", "light", "light"], ["light", "dark", "dark"],
+  ["dark", "system", "dark"], ["light", "system", "light"]] as const) {
+  test(`Display ${display} with the OS in ${os} mode paints the ${palette} palette`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: os });
+    await presetSettings(page, { display });
+    await openSample(page);
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(BG[palette]);
+  });
+}
+
 test("Reduce motion On and Off set data-motion", async ({ page }) => {
   await openSample(page);
   await openMenu(page);
