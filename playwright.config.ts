@@ -12,6 +12,8 @@ export default defineConfig({
   projects: [
     { name: "desktop", use: { browserName: "chromium", viewport: { width: 1280, height: 800 } } },
     { name: "phone", use: { browserName: "chromium", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
+    { name: "desktop-webkit", use: { browserName: "webkit", viewport: { width: 1280, height: 800 } } },
+    { name: "phone-webkit", use: { browserName: "webkit", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
   ],
   webServer: {
     command: process.env.CI ? `npx next start -p ${PORT}` : `npx next dev -p ${PORT}`, // CI tests the build

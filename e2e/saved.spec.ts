@@ -132,7 +132,7 @@ test("Clear data asks first, then returns to the start page for good", async ({ 
 
   await page.getByRole("button", { name: "Clear data" }).click();
   const yes = page.getByRole("button", { name: "Clear browser data" });
-  if (info.project.name === "phone") expect((await yes.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  if (info.project.name.startsWith("phone")) expect((await yes.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await yes.click();
   await expect(page.getByTestId("box").getByRole("status"))
     .toHaveText(`Browser data cleared. ${count(BASE)} films and their matches were removed from this browser.`);

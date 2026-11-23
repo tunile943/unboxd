@@ -94,7 +94,7 @@ test("the close button closes the menu", async ({ page }) => {
 });
 
 test("phones get a bottom sheet over a scrim", async ({ page }, info) => {
-  test.skip(info.project.name !== "phone", "phone layout");
+  test.skip(!info.project.name.startsWith("phone"), "phone layout");
   await openSample(page);
   await openMenu(page);
   await expect(page.getByTestId("settings-scrim")).toBeVisible();
@@ -108,7 +108,7 @@ test("phones get a bottom sheet over a scrim", async ({ page }, info) => {
 });
 
 test("desktop gets a popover under the gear", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "desktop layout");
+  test.skip(!info.project.name.startsWith("desktop"), "desktop layout");
   await openSample(page);
   await openMenu(page);
   await expect(page.getByTestId("settings-scrim")).toBeHidden();
@@ -123,7 +123,7 @@ test("desktop gets a popover under the gear", async ({ page }, info) => {
 });
 
 test("Boxd Out picks show stickers", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "both columns show on desktop");
+  test.skip(!info.project.name.startsWith("desktop"), "both columns show on desktop");
   await openSample(page);
   await expect(page.getByRole("region", { name: "Boxd Out" }).locator(".sticker.new").first()).toBeVisible();
 });

@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { mockApi, openSample, SAMPLE } from "./helpers";
 
-const isPhone = (name: string) => name === "phone";
+const isPhone = (name: string) => name.startsWith("phone");
 // Picked from the recorded fixture by what they show, so a re-recording with new picks still works.
 type Offers = { stream: { name: string }[]; rent: unknown[]; buy: unknown[] };
 const extras = SAMPLE.extras_us as Record<string, { trailer: unknown; providers: Offers }>;

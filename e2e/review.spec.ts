@@ -87,7 +87,7 @@ test("Not on TMDB leaves the film out; Escape closes without changes", async ({ 
 });
 
 test("phone: the picker is full-screen with large targets", async ({ page }, info) => {
-  test.skip(info.project.name !== "phone");
+  test.skip(!info.project.name.startsWith("phone"));
   await open(page);
   await page.getByRole("button", { name: "2 films need a check" }).click();
   await review(page, "Obsession").click();
