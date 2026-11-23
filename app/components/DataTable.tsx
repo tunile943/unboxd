@@ -30,7 +30,7 @@ export function DataTable({ films, reviewFirst = false, onFix }:
   const watched = films.filter((f) => f.watched);
   const reviewCount = watched.filter(needsReview).length;
   const fixedCount = watched.filter((f) => f.match_confidence === "user").length;
-  const sorted = [...watched].sort((a, b) => (b.weight ?? -2) - (a.weight ?? -2));
+  const sorted = watched.toSorted((a, b) => (b.weight ?? -2) - (a.weight ?? -2));
   const all = onlyReview ? sorted.filter(reviewable) : sorted;
   const rows = all.slice(0, shown);
   const left = all.length - rows.length;
@@ -111,7 +111,7 @@ export function DataTable({ films, reviewFirst = false, onFix }:
           </tbody>
         </table>
         {reviewing && (
-          <MatchReview film={reviewing.film} returnTo={reviewing.button}
+          <MatchReview film={reviewing.film} returnTo={reviewing.button} request={reviewing}
                        onFix={(fix) => onFix(reviewing.film, fix)} onClose={() => setReviewing(null)} />
         )}
         {left > 0 && (

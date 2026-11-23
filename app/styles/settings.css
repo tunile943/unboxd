@@ -1,20 +1,40 @@
 /* Settings: gear, desktop popover, phone bottom sheet (app/components/SettingsMenu.tsx) */
 .settings { position: relative; flex: none; display: inline-flex; }
 .gear {
-  width: 38px; height: 38px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+  anchor-name: --settings-gear; width: 38px; height: 38px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
   color: var(--ink); display: inline-grid; place-items: center; cursor: pointer; padding: 0;
 }
 .gear[aria-expanded="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .gi { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-.set-scrim { display: none; }
+/* A bottom sheet on phones and where anchor positioning is missing; a panel under the gear otherwise. */
 .set-pop {
-  position: absolute; right: 0; top: calc(100% + 6px); width: min(300px, calc(100vw - 32px)); z-index: 50;
-  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 14px;
-  box-shadow: 0 14px 34px rgba(10, 8, 14, .22); display: grid; gap: 14px; text-align: left;
-  font: 14px/1.45 var(--body); animation: set-in .16s ease-out;
+  inset: auto 8px max(8px, env(safe-area-inset-bottom, 0px)); margin: 0 auto; width: auto; max-width: 420px; max-height: calc(100dvh - 16px);
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 18px 18px 22px 22px;
+  padding: 10px 16px 18px; box-shadow: 0 14px 34px rgb(10 8 14 / .22); text-align: left;
+  font: 14px/1.45 var(--body); opacity: 0; translate: 0 100%;
 }
-@media (min-width: 641px) { .set-pop.start { right: auto; left: 0; } }
+.set-pop[open] { opacity: 1; translate: 0; }
+.set-in { display: grid; gap: 14px; } /* not on the dialog: WebKit stretches a grid placed with position-area */
+.set-in::before { content: ""; justify-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
+.set-pop::backdrop { background-color: rgb(10 8 14 / 0); }
+.set-pop[open]::backdrop { background-color: rgb(10 8 14 / .45); }
+@starting-style {
+  .set-pop[open] { opacity: 0; translate: 0 100%; }
+  .set-pop[open]::backdrop { background-color: rgb(10 8 14 / 0); }
+}
+@media (min-width: 641px) {
+  @supports (position-area: block-end) {
+    .set-pop {
+      position-anchor: --settings-gear; position-area: block-end span-inline-start; position-try-fallbacks: flip-inline;
+      inset: auto; margin: 6px 0 0; width: min(300px, calc(100vw - 32px)); border-radius: 12px; padding: 14px; translate: 0 -4px;
+    }
+    .set-pop[open] { translate: 0; }
+    .set-in::before { content: none; }
+    .set-pop[open]::backdrop { background-color: transparent; }
+    @starting-style { .set-pop[open] { translate: 0 -4px; } }
+  }
+}
 .set-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .set-h h2 { font: 800 18px/1.15 var(--display); letter-spacing: -.02em; }
 .set-x {
@@ -41,18 +61,8 @@
 .seg input:focus-visible + span { outline: 2px solid var(--to); outline-offset: 1px; }
 .set-pop .fine { font-size: 12px; color: var(--mute); }
 
-@keyframes set-in { from { opacity: 0; transform: translateY(-4px); } }
-@keyframes sheet-in { from { transform: translateY(100%); } }
-
 @media (max-width: 640px) {
   .gear { width: 44px; height: 44px; }
-  .set-scrim { display: block; position: fixed; inset: 0; z-index: 49; background: rgba(10, 8, 14, .45); }
-  .set-pop {
-    position: fixed; top: auto; left: 8px; right: 8px; width: auto;
-    bottom: max(8px, env(safe-area-inset-bottom, 0px));
-    border-radius: 18px 18px 22px 22px; padding: 10px 16px 18px; animation: sheet-in .2s ease-out;
-  }
-  .set-pop::before { content: ""; justify-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
   .set-x { width: 44px; height: 44px; }
   .seg span { min-height: 44px; }
   .set-select { min-height: 44px; }

@@ -2,39 +2,62 @@
    Bright brand colours are for fills, borders and the logo; in light mode, brand-coloured text uses the
    deep variants (--to/--tg/--tb), which pass AA. Labels on brand fills use dark ink (--on-brand). */
 :root {
-  --bg: #f6f5f9; --surface: #ffffff; --ink: #1d1b22; --mute: #5f5b68; --line: #dcd9e3;
-  --lo: #ff8000; --lg: #00e054; --lb: #40bcf4;          /* fills: orange, green (Boxd In), blue (Boxd Out) */
-  --to: #b34f00; --tg: #00753a; --tb: #0a6b94;          /* text variants */
-  --gw: #e3f8ec; --bw: #e2f3fc; --ow: #fff0e0;          /* washes */
-  --on-brand: #1d1b22; --red: #b4233a; --redw: #fde8eb;
-  --oni-g: #00e054; --oni-b: #40bcf4;                    /* mode labels on the selected (ink) tab */
-  /* kraft box */
-  --k-face: #efc290; --k-edge: #c98a55; --k-lid: #e9b67f; --k-floor: #b5f4cc; --k-wall: #6ee29e;
-  /* Flap-o logo faces (fixed in both themes) */
-  --i-l: #f0c08e; --i-r: #d99558; --i-ffl: #f9d6ad; --i-ffr: #e6a56b; --i-floor: #b5f4cc; --i-wall: #6ee29e; --i-wall2: #4fd488;
-  --lgap: var(--bg);
-  --po1: #6b2a3a; --po2: #2f4a5c; --po3: #5a4a2a; --po4: #3b2f5c; --po5: #2a5a4c; --po6: #5c3a2a; --po-ink: #f7f3ee;
-  --display: var(--font-display), system-ui, sans-serif;
-  --body: var(--font-body), system-ui, sans-serif;
+  color-scheme: light dark;
+  /* Themed colours: each written once, light (-l) and dark (-d). */
+  --bg-l: #f6f5f9; --bg-d: #16151b; --surface-l: #ffffff; --surface-d: #211f27; --ink-l: #1d1b22; --ink-d: #f1eff5;
+  --mute-l: #5f5b68; --mute-d: #a7a3b0; --line-l: #dcd9e3; --line-d: #34313c; --to-l: #b34f00; --to-d: #ff8000;
+  --tg-l: #00753a; --tg-d: #00e054; --tb-l: #0a6b94; --tb-d: #40bcf4; --gw-l: #e3f8ec; --gw-d: #0f2e1d;
+  --bw-l: #e2f3fc; --bw-d: #0e2836; --ow-l: #fff0e0; --ow-d: #33210d; --on-brand-l: #1d1b22; --on-brand-d: #16151b;
+  --red-l: #b4233a; --red-d: #ff7a8a; --redw-l: #fde8eb; --redw-d: #3a1820; --oni-g-l: #00e054; --oni-g-d: #00753a;
+  --oni-b-l: #40bcf4; --oni-b-d: #0a6b94; --k-face-l: #efc290; --k-face-d: #6b4c30;
+  --k-edge-l: #c98a55; --k-edge-d: #8e6844; --k-lid-l: #e9b67f; --k-lid-d: #7a5737;
+  --k-floor-l: #b5f4cc; --k-floor-d: #8eebb5; --k-wall-l: #6ee29e; --k-wall-d: #4fcf85;
+  --bg: light-dark(var(--bg-l), var(--bg-d)); --surface: light-dark(var(--surface-l), var(--surface-d));
+  --ink: light-dark(var(--ink-l), var(--ink-d)); --mute: light-dark(var(--mute-l), var(--mute-d));
+  --line: light-dark(var(--line-l), var(--line-d)); --to: light-dark(var(--to-l), var(--to-d));
+  --tg: light-dark(var(--tg-l), var(--tg-d)); --tb: light-dark(var(--tb-l), var(--tb-d));
+  --gw: light-dark(var(--gw-l), var(--gw-d)); --bw: light-dark(var(--bw-l), var(--bw-d));
+  --ow: light-dark(var(--ow-l), var(--ow-d)); --on-brand: light-dark(var(--on-brand-l), var(--on-brand-d));
+  --red: light-dark(var(--red-l), var(--red-d)); --redw: light-dark(var(--redw-l), var(--redw-d));
+  --oni-g: light-dark(var(--oni-g-l), var(--oni-g-d)); --oni-b: light-dark(var(--oni-b-l), var(--oni-b-d));
+  --k-face: light-dark(var(--k-face-l), var(--k-face-d)); --k-edge: light-dark(var(--k-edge-l), var(--k-edge-d));
+  --k-lid: light-dark(var(--k-lid-l), var(--k-lid-d)); --k-floor: light-dark(var(--k-floor-l), var(--k-floor-d));
+  --k-wall: light-dark(var(--k-wall-l), var(--k-wall-d));
+  --lo: #ff8000; --lg: #00e054; --lb: #40bcf4; --i-l: #f0c08e; --i-r: #d99558; --i-ffl: #f9d6ad; --i-ffr: #e6a56b;
+  --i-floor: #b5f4cc; --i-wall: #6ee29e; --i-wall2: #4fd488; --lgap: var(--bg); --po1: #6b2a3a; --po2: #2f4a5c;
+  --po3: #5a4a2a; --po4: #3b2f5c; --po5: #2a5a4c; --po6: #5c3a2a; --po-ink: #f7f3ee;
+  --display: var(--font-display), system-ui, sans-serif; --body: var(--font-body), system-ui, sans-serif;
   --mono: var(--font-mono), ui-monospace, Menlo, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #16151b; --surface: #211f27; --ink: #f1eff5; --mute: #a7a3b0; --line: #34313c;
-    --to: #ff8000; --tg: #00e054; --tb: #40bcf4;
-    --gw: #0f2e1d; --bw: #0e2836; --ow: #33210d; --on-brand: #16151b; --red: #ff7a8a; --redw: #3a1820;
-    --oni-g: #00753a; --oni-b: #0a6b94;
-    --k-face: #6b4c30; --k-edge: #8e6844; --k-lid: #7a5737; --k-floor: #8eebb5; --k-wall: #4fcf85;
-    color-scheme: dark;
+/* Display mode: Light or Dark pins the scheme; System (no attribute) follows the OS. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+/* Before light-dark() (Safari 17.5, Chrome 123, Firefox 120): pick each palette by media query and attribute. */
+@supports not (color: light-dark(#000, #fff)) {
+  :root {
+    --bg: var(--bg-l); --surface: var(--surface-l); --ink: var(--ink-l); --mute: var(--mute-l);
+    --line: var(--line-l); --to: var(--to-l); --tg: var(--tg-l); --tb: var(--tb-l); --gw: var(--gw-l);
+    --bw: var(--bw-l); --ow: var(--ow-l); --on-brand: var(--on-brand-l); --red: var(--red-l); --redw: var(--redw-l);
+    --oni-g: var(--oni-g-l); --oni-b: var(--oni-b-l); --k-face: var(--k-face-l); --k-edge: var(--k-edge-l);
+    --k-lid: var(--k-lid-l); --k-floor: var(--k-floor-l); --k-wall: var(--k-wall-l);
   }
-}
-:root[data-theme="dark"] {
-  --bg: #16151b; --surface: #211f27; --ink: #f1eff5; --mute: #a7a3b0; --line: #34313c;
-  --to: #ff8000; --tg: #00e054; --tb: #40bcf4;
-  --gw: #0f2e1d; --bw: #0e2836; --ow: #33210d; --on-brand: #16151b; --red: #ff7a8a; --redw: #3a1820;
-  --oni-g: #00753a; --oni-b: #0a6b94;
-  --k-face: #6b4c30; --k-edge: #8e6844; --k-lid: #7a5737; --k-floor: #8eebb5; --k-wall: #4fcf85;
-  color-scheme: dark;
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: var(--bg-d); --surface: var(--surface-d); --ink: var(--ink-d); --mute: var(--mute-d);
+      --line: var(--line-d); --to: var(--to-d); --tg: var(--tg-d); --tb: var(--tb-d); --gw: var(--gw-d);
+      --bw: var(--bw-d); --ow: var(--ow-d); --on-brand: var(--on-brand-d); --red: var(--red-d);
+      --redw: var(--redw-d); --oni-g: var(--oni-g-d); --oni-b: var(--oni-b-d); --k-face: var(--k-face-d);
+      --k-edge: var(--k-edge-d); --k-lid: var(--k-lid-d); --k-floor: var(--k-floor-d); --k-wall: var(--k-wall-d);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: var(--bg-d); --surface: var(--surface-d); --ink: var(--ink-d); --mute: var(--mute-d);
+    --line: var(--line-d); --to: var(--to-d); --tg: var(--tg-d); --tb: var(--tb-d); --gw: var(--gw-d);
+    --bw: var(--bw-d); --ow: var(--ow-d); --on-brand: var(--on-brand-d); --red: var(--red-d); --redw: var(--redw-d);
+    --oni-g: var(--oni-g-d); --oni-b: var(--oni-b-d); --k-face: var(--k-face-d); --k-edge: var(--k-edge-d);
+    --k-lid: var(--k-lid-d); --k-floor: var(--k-floor-d); --k-wall: var(--k-wall-d);
+  }
 }
 
 /* Under reduced motion, views crossfade instead of moving (the one animation kept). */

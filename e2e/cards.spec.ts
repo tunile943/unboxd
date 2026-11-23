@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { mockApi, openSample, SAMPLE } from "./helpers";
 
-const isPhone = (name: string) => name === "phone";
+const isPhone = (name: string) => name.startsWith("phone");
 // Picked from the recorded fixture by what they show, so a re-recording with new picks still works.
 type Offers = { stream: { name: string }[]; rent: unknown[]; buy: unknown[] };
 const extras = SAMPLE.extras_us as Record<string, { trailer: unknown; providers: Offers }>;
@@ -79,7 +79,7 @@ test("phone: details open inside the card, one card at a time", async ({ page },
 
 test("changing the watch region refetches and is remembered", async ({ page }) => {
   await openSample(page);
-  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByLabel("Watch region").selectOption("GB");
   await page.getByRole("button", { name: "Close settings" }).click();
   await expect(card(page, logan.title).getByText("Not streaming in United Kingdom")).toBeVisible();
@@ -96,6 +96,41 @@ test("if extras fail, cards still work without trailer or providers", async ({ p
   await expect(c.getByRole("button", { name: `Details about ${logan.title}` })).toBeVisible();
 });
 
+test("desktop: a click on the backdrop closes the drawer and focus returns", async ({ page }, info) => {
+  test.skip(isPhone(info.project.name));
+  await openSample(page);
+  const details = card(page, incendies.title).getByRole("button", { name: `Details about ${incendies.title}` });
+  await details.click();
+  const drawer = page.getByRole("dialog", { name: /Incendies/ });
+  await expect(drawer).toBeVisible();
+  await page.mouse.click(40, 400); // left of the panel
+  await expect(drawer).toHaveCount(0);
+  await expect(details).toBeFocused();
+});
+
+test("desktop: Details on another card while the drawer is closing opens that one", async ({ page }, info) => {
+  test.skip(isPhone(info.project.name));
+  await openSample(page);
+  await card(page, incendies.title).getByRole("button", { name: `Details about ${incendies.title}` }).click();
+  await expect(page.getByRole("dialog", { name: /Incendies/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await card(page, logan.title).getByRole("button", { name: `Details about ${logan.title}` }).click();
+  await page.waitForTimeout(500); // past the exit transition
+  await expect(page.getByRole("dialog", { name: new RegExp(logan.title) })).toBeVisible();
+});
+
+test("desktop: Details on the same card while the drawer is closing reopens it", async ({ page }, info) => {
+  test.skip(isPhone(info.project.name));
+  await openSample(page);
+  const details = card(page, incendies.title).getByRole("button", { name: `Details about ${incendies.title}` });
+  await details.click();
+  await expect(page.getByRole("dialog", { name: /Incendies/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await details.dispatchEvent("click"); // at once, while it's still closing
+  await page.waitForTimeout(500); // past the exit transition
+  await expect(page.getByRole("dialog", { name: /Incendies/ })).toBeVisible();
+});
+
 test("desktop: clicking blank space inside the drawer keeps it open", async ({ page }, info) => {
   test.skip(isPhone(info.project.name));
   await openSample(page, { fail: "extras" }); // no trailer or providers: a short panel
@@ -107,15 +142,22 @@ test("desktop: clicking blank space inside the drawer keeps it open", async ({ p
 });
 
 test("a failed extras call is retried when the region changes back", async ({ page }) => {
-  let calls = 0;
+  let regionChanged = false;
   await mockApi(page);
-  // Registered after mockApi, so it runs first: the first extras call fails.
-  await page.route("**/api/extras", (route) => (++calls === 1 ? route.fulfill({ status: 500, body: "boom" }) : route.fallback()));
+  // Registered after mockApi, so it runs first. Logan's extras fail until the region changes: a retry when
+  // Boxd Out's list arrives must not count.
+  await page.route("**/api/extras", (route) => {
+    const body = route.request().postDataJSON();
+    if (body.region !== "US") regionChanged = true;
+    const hasLogan = body.films.some((f: { tmdb_id: number }) => f.tmdb_id === logan.tmdb_id);
+    return hasLogan && !regionChanged ? route.fulfill({ status: 500, body: "boom" }) : route.fallback();
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "Try with sample data" }).click();
+  await expect(card(page, logan.title)).toBeVisible(); // else the count below passes before the failed call lands
   await expect(card(page, logan.title).locator(".u-avail")).toHaveCount(0);
   for (const r of ["GB", ""]) {
-    await page.getByRole("button", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "Settings", exact: true }).click(); // right after Close: reopens mid-exit
     await page.getByLabel("Watch region").selectOption(r);
     await page.getByRole("button", { name: "Close settings" }).click();
   }

@@ -108,7 +108,7 @@ test("the landing never scrolls sideways, loading included", async ({ page }) =>
 });
 
 test("phone: landing buttons are at least 44px tall", async ({ page }, info) => {
-  test.skip(info.project.name !== "phone");
+  test.skip(!info.project.name.startsWith("phone"));
   await mockApi(page);
   await page.goto("/");
   for (const btn of [page.getByText("Choose ZIP"), page.getByRole("button", { name: "Try with sample data" })]) {

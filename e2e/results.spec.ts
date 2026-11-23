@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { openSample, SAMPLE } from "./helpers";
 
-const isPhone = (name: string) => name === "phone";
+const isPhone = (name: string) => name.startsWith("phone");
 const region = (page: Page, name: string) => page.getByRole("region", { name, exact: true });
 const noSideScroll = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -53,7 +53,7 @@ test("a pick on your watchlist carries the badge", async ({ page }, info) => {
   await expect(badged).toHaveCount((inPick ? SAMPLE.picks_in : SAMPLE.picks_out).filter((p) => p.on_watchlist).length);
 });
 
-test("the sample strip opens the shipping label and leads back to the landing", async ({ page }) => {
+test("the sample strip opens the shipping label and leads back to the landing", async ({ page }, info) => {
   await openSample(page);
   await expect(page.getByText("Sample diary", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Who is the sample diary?" }).click();
@@ -62,6 +62,12 @@ test("the sample strip opens the shipping label and leads back to the landing", 
   expect(await noSideScroll(page)).toBeLessThanOrEqual(0);
   await page.keyboard.press("Escape");
   await expect(label).toBeHidden();
+  if (!isPhone(info.project.name)) { // phones fill the screen: no backdrop to click
+    await page.getByRole("button", { name: "Who is the sample diary?" }).click();
+    await expect(label).toBeVisible();
+    await page.mouse.click(20, 20);
+    await expect(label).toBeHidden();
+  }
 
   await page.getByRole("button", { name: "Use your own export" }).click();
   await expect(page.getByTestId("landing")).toBeVisible();
@@ -115,7 +121,7 @@ test("tabs work from the keyboard", async ({ page }, info) => {
 });
 
 test("on desktop each column scrolls on its own", async ({ page }, info) => {
-  test.skip(info.project.name !== "desktop", "phones show one column at a time");
+  test.skip(!info.project.name.startsWith("desktop"), "phones show one column at a time");
   await openSample(page);
   const boxdIn = page.getByRole("region", { name: "Boxd In" });
   const boxdOut = page.getByRole("region", { name: "Boxd Out" });
@@ -138,7 +144,7 @@ test("focus moves to the results, and back to the landing on start over", async 
 });
 
 test("on phones the sample label is a full-screen sheet that scrolls", async ({ page }, info) => {
-  test.skip(info.project.name !== "phone", "desktop keeps the centered modal");
+  test.skip(!info.project.name.startsWith("phone"), "desktop keeps the centered modal");
   await page.setViewportSize({ width: 390, height: 600 }); // a short phone: the label no longer fits
   await openSample(page);
   await page.getByRole("button", { name: "Who is the sample diary?" }).click();
@@ -175,5 +181,13 @@ test("the footer sits at the bottom with no empty space past it", async ({ page 
     footBottom: document.querySelector("footer.u-foot")!.getBoundingClientRect().bottom + scrollY,
   }));
   expect(docH - footBottom).toBeLessThanOrEqual(30); // just the page's bottom padding
-  if (info.project.name === "desktop") expect(docH).toBe(vh); // header, both columns and footer fit one screen
+  if (info.project.name.startsWith("desktop")) expect(docH).toBe(vh); // header, both columns and footer fit one screen
+});
+
+test("desktop: a footer that wraps to two lines still fits one screen", async ({ page }, info) => {
+  test.skip(!info.project.name.startsWith("desktop"), "desktop layout");
+  await openSample(page);
+  await page.locator(".u-card").first().waitFor();
+  await page.addStyleTag({ content: "footer.u-foot p { letter-spacing: .03em; }" }); // wider text, as on Linux
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(page.viewportSize()!.height);
 });

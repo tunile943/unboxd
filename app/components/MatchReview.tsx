@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { type Film, lookupTitle, parseTmdbLink, searchTitles, type Title } from "@/lib/export";
+import { useModal } from "../useModal";
 import type { Fix } from "../useUnboxd";
 
 const KIND = { movie: "Film", tv: "Limited series" };
@@ -44,9 +45,10 @@ type Search = { state: "idle" | "loading" | "done" | "error"; results: Title[] }
  * Match review: the current match first and largest, then the runner-ups matching found, then (folded unless there's
  * nothing else to choose from) a TMDB search that also takes a pasted TMDB link, and "Not on TMDB".
  */
-export function MatchReview({ film, returnTo, onFix, onClose }:
-  { film: Film; returnTo: HTMLElement | null; onFix: (fix: Fix) => void; onClose: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null);
+export function MatchReview({ film, returnTo, request, onFix, onClose }:
+  { film: Film; returnTo: HTMLElement | null; request: object; onFix: (fix: Fix) => void; onClose: () => void }) {
+  const modal = useModal(onClose, returnTo, request);
+  const { ref } = modal;
   const input = useRef<HTMLInputElement>(null);
   const id = useId();
   const memo = `${film.name}|${film.year}`;
@@ -61,11 +63,8 @@ export function MatchReview({ film, returnTo, onFix, onClose }:
   const [search, setSearch] = useState<Search>({ state: "idle", results: [] });
 
   useEffect(() => {
-    const dlg = ref.current!;
-    if (!dlg.open) dlg.showModal();
     if (!current && !others.length) input.current?.focus(); // nothing to choose from: start at search
-    return () => returnTo?.focus();
-  }, [returnTo]); // on open only
+  }, []); // on open only
 
   useEffect(() => {
     if (open) typed.set(memo, { q, year });
@@ -103,8 +102,7 @@ export function MatchReview({ film, returnTo, onFix, onClose }:
     : film.match_confidence === "user" ? null : film.match_reason;
 
   return (
-    <dialog ref={ref} className="u-drawer u-review" aria-labelledby={`${id}-t`} onClose={onClose}
-            onClick={(e) => e.target === e.currentTarget && e.currentTarget.close()}>
+    <dialog {...modal} className="u-drawer u-review" aria-labelledby={`${id}-t`}>
       <div className="u-drawer-in">
         <header>
           <h2 id={`${id}-t`}>Match review</h2>

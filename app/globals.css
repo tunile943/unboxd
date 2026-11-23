@@ -1,7 +1,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+  margin: 0; min-height: 100dvh; background: var(--bg); color: var(--ink);
   font: 15px/1.5 var(--body);
 }
 h1, h2, h3, h4, h5 { margin: 0; line-height: 1.15; text-wrap: balance; }
@@ -11,12 +11,24 @@ a { color: var(--to); }
 button { font: inherit; color: inherit; }
 img { max-width: 100%; }
 
+/* Modals: entry and exit transitions (each dialog sets its open and closed looks), and no page scroll behind them. */
+dialog, dialog::backdrop {
+  transition-property: opacity, translate, scale, background-color, display, overlay;
+  transition-duration: .22s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }
+
 /* A full-height column, so the footer sits at the bottom of the screen when the content is shorter. */
 .page { max-width: 1120px; margin: 0 auto; padding-block: 0 24px; min-height: 100dvh; box-sizing: border-box;
   display: flex; flex-direction: column; gap: 16px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .page-main { display: flex; flex-direction: column; gap: 16px; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* No :focus-within exception: the results <h1> and the ZIP input stay hidden while focused. */
+.sr-only { position: absolute !important; clip-path: inset(50%) !important; overflow: hidden !important;
+  width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important; border: 0 !important; white-space: nowrap !important; }
 .muted { color: var(--mute); }
 .error { color: var(--red); }
 

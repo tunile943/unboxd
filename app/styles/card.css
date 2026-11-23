@@ -53,9 +53,14 @@
   padding: 0; border: 0; border-left: 1px solid var(--line); background: var(--surface); color: var(--ink);
   box-shadow: -24px 0 48px rgb(0 0 0 / .35); overflow-y: auto; overscroll-behavior: contain;
 }
-.u-drawer[open] { animation: u-slide .22s ease-out; }
-@keyframes u-slide { from { transform: translateX(40px); opacity: 0; } }
-.u-drawer::backdrop { background: rgb(11 10 14 / .6); }
+.u-drawer { opacity: 0; translate: 40px 0; }
+.u-drawer[open] { opacity: 1; translate: 0; }
+.u-drawer::backdrop { background-color: rgb(11 10 14 / 0); }
+.u-drawer[open]::backdrop { background-color: rgb(11 10 14 / .6); }
+@starting-style {
+  .u-drawer[open] { opacity: 0; translate: 40px 0; }
+  .u-drawer[open]::backdrop { background-color: rgb(11 10 14 / 0); }
+}
 .u-drawer-in { min-height: 100%; box-sizing: border-box; padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 12px; }
 .u-drawer header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .u-drawer h2 { margin: 0; font: 800 26px/1.1 var(--display); }

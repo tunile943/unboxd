@@ -44,7 +44,8 @@ export function PickCard({ pick, index, extras, region, phone, expanded, onDetai
   return (
     <li className={`u-card${expanded ? " open" : ""}`} style={{ "--d": `${0.08 + Math.min(index, 8) * 0.05}s` } as React.CSSProperties}>
       {pick.poster_path ? (
-        <img className="poster" src={`https://image.tmdb.org/t/p/w154${pick.poster_path}`} alt="" width={52} height={78} loading="lazy" />
+        <img className="poster" src={`https://image.tmdb.org/t/p/w154${pick.poster_path}`} alt="" width={52} height={78}
+             loading={index < 3 ? undefined : "lazy"} /* the first cards are on screen at load */ />
       ) : (
         <span className="poster" style={{ "--c": `var(--po${(index % 6) + 1})` } as React.CSSProperties}>{pick.title}</span>
       )}
