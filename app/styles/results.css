@@ -115,7 +115,7 @@ img.poster { padding: 0; display: block; }
   .u-data .yr { display: none; }
   .u-data td.film { white-space: normal; min-width: 120px; }
   .u-data .short { display: inline; }
-  .u-data .long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .u-data .long { position: absolute; clip-path: inset(50%); overflow: hidden; width: 1px; height: 1px; margin: -1px; white-space: nowrap; }
 }
 
 /* Footer */
@@ -128,7 +128,7 @@ img.poster { padding: 0; display: block; }
 @media (max-width: 640px) { .u-foot nav a { min-height: 44px; } }
 
 /* The sample's shipping label stays light in both themes, like a real sticker. */
-.u-persona-dlg { border: 0; padding: 0; background: transparent; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; color-scheme: light;
+.u-persona-dlg { border: 0; padding: 0; background: transparent; width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; color-scheme: light;
   opacity: 0; scale: .96; }
 .u-persona-dlg[open] { opacity: 1; scale: 1; }
 .u-persona-dlg::backdrop { background-color: rgb(10 8 14 / 0); }
