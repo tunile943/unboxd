@@ -4,6 +4,7 @@ import { openSample, presetSettings } from "./helpers";
 const gear = (page: Page) => page.getByRole("button", { name: "Settings", exact: true });
 const menu = (page: Page) => page.getByRole("dialog", { name: "Settings" });
 const attr = (page: Page, name: string) => page.evaluate((n) => document.documentElement.getAttribute(n), name);
+const backdrop = (page: Page) => menu(page).evaluate((el) => getComputedStyle(el, "::backdrop").backgroundColor);
 
 async function openMenu(page: Page) {
   await gear(page).click();
@@ -80,7 +81,7 @@ test("Escape closes the menu and returns focus to the gear", async ({ page }) =>
 test("an outside click closes the menu and returns focus to the gear", async ({ page }) => {
   await openSample(page);
   await openMenu(page);
-  await page.mouse.click(4, 500); // the page gutter on desktop, the scrim on phones
+  await page.mouse.click(4, 500); // the backdrop: clear on desktop, dimmed on phones
   await expect(menu(page)).toHaveCount(0);
   await expect(gear(page)).toBeFocused();
 });
@@ -93,17 +94,17 @@ test("the close button closes the menu", async ({ page }) => {
   await expect(gear(page)).toBeFocused();
 });
 
-test("phones get a bottom sheet over a scrim", async ({ page }, info) => {
+test("phones get a bottom sheet over a dimmed backdrop", async ({ page }, info) => {
   test.skip(!info.project.name.startsWith("phone"), "phone layout");
   await openSample(page);
   await openMenu(page);
-  await expect(page.getByTestId("settings-scrim")).toBeVisible();
+  await expect.poll(() => backdrop(page)).not.toBe("rgba(0, 0, 0, 0)");
   const box = (await menu(page).boundingBox())!;
   const viewport = page.viewportSize()!;
   expect(box.y + box.height).toBeGreaterThan(viewport.height - 20);
   expect(box.width).toBeGreaterThan(viewport.width - 20);
   expect((await gear(page).boundingBox())!.width).toBe(44);
-  await page.getByTestId("settings-scrim").click({ position: { x: 20, y: 20 } });
+  await page.mouse.click(20, 20);
   await expect(menu(page)).toHaveCount(0);
 });
 
@@ -111,7 +112,7 @@ test("desktop gets a popover under the gear", async ({ page }, info) => {
   test.skip(!info.project.name.startsWith("desktop"), "desktop layout");
   await openSample(page);
   await openMenu(page);
-  await expect(page.getByTestId("settings-scrim")).toBeHidden();
+  expect(await backdrop(page)).toBe("rgba(0, 0, 0, 0)");
   const g = (await gear(page).boundingBox())!;
   const m = (await menu(page).boundingBox())!;
   expect(m.y).toBeGreaterThan(g.y + g.height);
@@ -120,6 +121,17 @@ test("desktop gets a popover under the gear", async ({ page }, info) => {
   expect(m.x + m.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   // Anchored to the gear: one of its edges lines up with the gear's.
   expect(Math.min(Math.abs(m.x - g.x), Math.abs(m.x + m.width - (g.x + g.width)))).toBeLessThan(2);
+});
+
+test("desktop: with the gear at the left edge, the panel flips to stay on screen", async ({ page }, info) => {
+  test.skip(!info.project.name.startsWith("desktop"), "desktop layout");
+  await openSample(page);
+  await page.addStyleTag({ content: ".settings { position: fixed; left: 8px; top: 8px; }" });
+  await openMenu(page);
+  const g = (await gear(page).boundingBox())!;
+  const m = (await menu(page).boundingBox())!;
+  expect(m.x).toBeGreaterThanOrEqual(0);
+  expect(Math.abs(m.x - g.x)).toBeLessThan(2);
 });
 
 test("Boxd Out picks show stickers", async ({ page }, info) => {

@@ -79,7 +79,7 @@ test("phone: details open inside the card, one card at a time", async ({ page },
 
 test("changing the watch region refetches and is remembered", async ({ page }) => {
   await openSample(page);
-  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByLabel("Watch region").selectOption("GB");
   await page.getByRole("button", { name: "Close settings" }).click();
   await expect(card(page, logan.title).getByText("Not streaming in United Kingdom")).toBeVisible();
@@ -145,7 +145,7 @@ test("a failed extras call is retried when the region changes back", async ({ pa
   await expect(card(page, logan.title)).toBeVisible(); // else the count below passes before the failed call lands
   await expect(card(page, logan.title).locator(".u-avail")).toHaveCount(0);
   for (const r of ["GB", ""]) {
-    await page.getByRole("button", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "Settings", exact: true }).click(); // right after Close: reopens mid-exit
     await page.getByLabel("Watch region").selectOption(r);
     await page.getByRole("button", { name: "Close settings" }).click();
   }
