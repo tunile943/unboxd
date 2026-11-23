@@ -49,7 +49,7 @@ export function PickColumns({ picksIn, picksOut, outError, tab, extras, region }
       </section>
       {!phone && open && (
         <DetailsDrawer pick={open.pick} extras={extras(open.pick.tmdb_id)} region={region} play={open.play}
-                       returnTo={open.button} onClose={() => setOpen(null)} />
+                       returnTo={open.button} request={open} onClose={() => setOpen(null)} />
       )}
     </div>
   );

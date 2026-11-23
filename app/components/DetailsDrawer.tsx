@@ -5,11 +5,11 @@ import { useModal } from "../useModal";
 import { FilmDetails } from "./FilmDetails";
 
 /** Desktop details: a modal side panel. Escape, the × or a click outside closes it; focus goes back to the card. */
-export function DetailsDrawer({ pick, extras, region, play, returnTo, onClose }: {
+export function DetailsDrawer({ pick, extras, region, play, returnTo, request, onClose }: {
   pick: Pick; extras: Extras | null | undefined; region: string; play: boolean;
-  returnTo: HTMLElement | null; onClose: () => void;
+  returnTo: HTMLElement | null; request: object; onClose: () => void; // a new request reopens it mid-exit
 }) {
-  const modal = useModal(onClose, returnTo);
+  const modal = useModal(onClose, returnTo, request);
 
   return (
     <dialog {...modal} className="u-drawer" aria-labelledby="drawer-title">

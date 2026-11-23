@@ -119,6 +119,18 @@ test("desktop: Details on another card while the drawer is closing opens that on
   await expect(page.getByRole("dialog", { name: new RegExp(logan.title) })).toBeVisible();
 });
 
+test("desktop: Details on the same card while the drawer is closing reopens it", async ({ page }, info) => {
+  test.skip(isPhone(info.project.name));
+  await openSample(page);
+  const details = card(page, incendies.title).getByRole("button", { name: `Details about ${incendies.title}` });
+  await details.click();
+  await expect(page.getByRole("dialog", { name: /Incendies/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await details.dispatchEvent("click"); // at once, while it's still closing
+  await page.waitForTimeout(500); // past the exit transition
+  await expect(page.getByRole("dialog", { name: /Incendies/ })).toBeVisible();
+});
+
 test("desktop: clicking blank space inside the drawer keeps it open", async ({ page }, info) => {
   test.skip(isPhone(info.project.name));
   await openSample(page, { fail: "extras" }); // no trailer or providers: a short panel

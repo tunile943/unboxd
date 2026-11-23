@@ -111,7 +111,7 @@ export function DataTable({ films, reviewFirst = false, onFix }:
           </tbody>
         </table>
         {reviewing && (
-          <MatchReview film={reviewing.film} returnTo={reviewing.button}
+          <MatchReview film={reviewing.film} returnTo={reviewing.button} request={reviewing}
                        onFix={(fix) => onFix(reviewing.film, fix)} onClose={() => setReviewing(null)} />
         )}
         {left > 0 && (

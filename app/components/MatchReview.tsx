@@ -45,9 +45,9 @@ type Search = { state: "idle" | "loading" | "done" | "error"; results: Title[] }
  * Match review: the current match first and largest, then the runner-ups matching found, then (folded unless there's
  * nothing else to choose from) a TMDB search that also takes a pasted TMDB link, and "Not on TMDB".
  */
-export function MatchReview({ film, returnTo, onFix, onClose }:
-  { film: Film; returnTo: HTMLElement | null; onFix: (fix: Fix) => void; onClose: () => void }) {
-  const modal = useModal(onClose, returnTo);
+export function MatchReview({ film, returnTo, request, onFix, onClose }:
+  { film: Film; returnTo: HTMLElement | null; request: object; onFix: (fix: Fix) => void; onClose: () => void }) {
+  const modal = useModal(onClose, returnTo, request);
   const { ref } = modal;
   const input = useRef<HTMLInputElement>(null);
   const id = useId();
