@@ -25,7 +25,7 @@ jobs:
       - run: pytest -q  # live TMDB tests are skipped unless run with -m live
 
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.57 can't install browsers on 26.04, which ubuntu-latest now is
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,7 +34,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx next build
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npx playwright test  # against next start (the build above); API is mocked, so no Python or token
       - uses: actions/upload-artifact@v4
         if: failure()
