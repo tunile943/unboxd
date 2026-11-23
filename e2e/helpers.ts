@@ -20,7 +20,8 @@ export async function mockApi(page: Page, opts: MockOptions = {}) {
     [...fixture.resolved, ...(opts.resolved ?? [])].map((f) => [`${(f as Film).name}|${(f as Film).year}`, f]));
   const wait = () => new Promise((r) => setTimeout(r, opts.delayMs ?? 0));
   await page.route("**/image.tmdb.org/**", (route) => route.fulfill({ body: PIXEL, contentType: "image/png" }));
-  await page.route("**/api/**", async (route) => {
+  await page.route(/^https:\/\/www\.youtube-nocookie\.com\//, (route) => route.fulfill({ body: "", contentType: "text/html" }));
+  await page.route((url) => url.hostname === "localhost" && url.pathname.startsWith("/api/"), async (route) => {
     const url = new URL(route.request().url());
     const endpoint = url.pathname.replace("/api/", "");
     await wait();
