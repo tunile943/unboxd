@@ -49,7 +49,7 @@ export default function Home() {
     <div className="page">
       <main className="page-main">
         {u.phase === "restoring" ? null : revealed ? (
-          <div data-testid="results" className="fade-in">
+          <div data-testid="results" className="u-results fade-in">
             <h1 ref={heading} tabIndex={-1} className="sr-only">
               {u.isSample ? "Recommendations for the sample diary" : "Your recommendations"}
             </h1>
@@ -87,7 +87,7 @@ export default function Home() {
                 )}
               </div>
             )}
-            <div id={PANEL_ID} role="tabpanel" aria-label={tab === "data" ? "Your data" : "Recommendations"}>
+            <div id={PANEL_ID} className="u-panel" role="tabpanel" aria-label={tab === "data" ? "Your data" : "Recommendations"}>
               {tab === "data" ? (
                 <DataTable key={reviewOpens} films={u.films!} reviewFirst={reviewOpens > 0} onFix={u.fixMatch} />
               ) : (

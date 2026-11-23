@@ -183,3 +183,11 @@ test("the footer sits at the bottom with no empty space past it", async ({ page 
   expect(docH - footBottom).toBeLessThanOrEqual(30); // just the page's bottom padding
   if (info.project.name.startsWith("desktop")) expect(docH).toBe(vh); // header, both columns and footer fit one screen
 });
+
+test("desktop: a footer that wraps to two lines still fits one screen", async ({ page }, info) => {
+  test.skip(!info.project.name.startsWith("desktop"), "desktop layout");
+  await openSample(page);
+  await page.locator(".u-card").first().waitFor();
+  await page.addStyleTag({ content: "footer.u-foot p { letter-spacing: .03em; }" }); // wider text, as on Linux
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(page.viewportSize()!.height);
+});
